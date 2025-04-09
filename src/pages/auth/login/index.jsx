@@ -1,87 +1,94 @@
-export function Login() {
-    return (
-        <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-            <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-                <img
-                    class="mx-auto h-10 w-auto"
-                    src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                    alt="Ace Brainiac"
-                />
-                <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-                    Sign in to your account
-                </h2>
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import useAdminLogin from "../../../hooks/useAdminLogin";
+
+
+export default function AdminPortal() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { loginAdmin, loading, error } = useAdminLogin();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error("Please enter all fields", { position: "top-right" });
+      return;
+    }
+    console.log("Attempting admin login with:", { email, password });
+    await loginAdmin(email, password);
+    // Navigation is handled in the hook
+  };
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-[#31473A]">
+      <ToastContainer />
+      <div className="bg-[#EEF4F2] rounded-2xl shadow-lg p-8 w-96">
+        <h2 className="text-2xl font-semibold text-gray-900 text-left">Ace Brainiac</h2>
+        <p className="text-sm text-gray-600 font-semibold text-left">Admin Portal</p>
+        
+        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <label className="block text-gray-700 text-sm font-medium">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+              className="w-full px-4 py-2 border rounded-md text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-green-700"
+            />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between">
+              <label className="block text-gray-700 text-sm font-medium">Password</label>
+              <div className="text-sm">
+                <Link
+                  to="/reset-password"
+                  className="text-green-900 font-semibold hover:underline"
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </div>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+              className="w-full px-4 py-2 border rounded-md text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-green-700"
+            />
+          </div>
 
-            <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-                <form class="space-y-6" action="#" method="POST">
-                    <div>
-                        <label
-                            for="email"
-                            class="block text-sm/6 font-medium text-gray-900"
-                        >
-                            Email address
-                        </label>
-                        <div class="mt-2">
-                            <input
-                                type="email"
-                                name="email"
-                                id="email"
-                                autocomplete="email"
-                                required
-                                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                            />
-                        </div>
-                    </div>
+          <button
+            type="submit"
+            className="w-full bg-[#31473A] text-white py-2 rounded-md mt-4 hover:bg-[#4a6a57]"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "SUBMIT"}
+          </button>
+        </form>
 
-                    <div>
-                        <div class="flex items-center justify-between">
-                            <label
-                                for="password"
-                                class="block text-sm/6 font-medium text-gray-900"
-                            >
-                                Password
-                            </label>
-                            <div class="text-sm">
-                                <a
-                                    href="#"
-                                    class="font-semibold text-indigo-600 hover:text-indigo-500"
-                                >
-                                    Forgot password?
-                                </a>
-                            </div>
-                        </div>
-                        <div class="mt-2">
-                            <input
-                                type="password"
-                                name="password"
-                                id="password"
-                                autocomplete="current-password"
-                                required
-                                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <button
-                            type="submit"
-                            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                        >
-                            Sign in
-                        </button>
-                    </div>
-                </form>
-
-                <p class="mt-10 text-center text-sm/6 text-gray-500">
-                    Not a member?
-                    <a
-                        href="#"
-                        class="font-semibold text-indigo-600 hover:text-indigo-500"
-                    >
-                        Start a 14 day free trial
-                    </a>
-                </p>
-            </div>
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        
+        <div className="flex items-center my-4">
+          <hr className="flex-grow border-gray-300" />
+          <span className="mx-2 text-sm text-gray-500">or</span>
+          <hr className="flex-grow border-gray-300" />
         </div>
-    );
+        
+        <div className="text-center text-sm text-gray-600">
+          <p>
+            <span className="font-semibold">Need help accessing your account?</span>{" "}
+            <Link to="/contact-support" className="text-green-900 font-semibold hover:underline">
+              Contact IT support
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
