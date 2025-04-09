@@ -36,10 +36,10 @@ const Sidebar = () => {
             path: "/dashboard",
         },
         {
-            id: "users",
-            label: "Users",
+            id: "students",
+            label: "Students",
             icon: "users",
-            path: "/users",
+            path: "/students",
         },
         {
             id: "analytics",
@@ -172,7 +172,7 @@ const Sidebar = () => {
         <div className="flex h-screen">
             {/* Sidebar */}
             <div
-                className={`bg-gray-800 text-white transition-all duration-300 flex flex-col ${
+                className={`bg-primary text-white transition-all duration-300 flex flex-col ${
                     isOpen ? "w-64" : "w-16"
                 } md:relative fixed h-full z-10`}
             >
