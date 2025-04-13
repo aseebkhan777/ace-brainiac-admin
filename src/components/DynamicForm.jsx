@@ -83,6 +83,19 @@ const DynamicForm = ({
                         disabled={loading}
                     />
                 );
+                
+            case 'number':
+                return (
+                    <input
+                        key={field.name}
+                        type="number"
+                        placeholder={field.placeholder}
+                        value={formData[field.name]}
+                        className="w-full mb-3 p-2 border rounded-lg bg-white"
+                        onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                        disabled={loading}
+                    />
+                );
 
             case 'date':
                 return (
@@ -200,7 +213,14 @@ const DynamicForm = ({
             )}
 
             {/* Dynamic Fields Rendering */}
-            {fields.map(renderField)}
+            {fields.map(field => (
+                <div key={field.name}>
+                    {field.sectionTitle && (
+                        <h3 className="text-md font-medium mt-6 mb-3">{field.sectionTitle}</h3>
+                    )}
+                    {renderField(field)}
+                </div>
+            ))}
 
             {/* Footer: Action Buttons */}
             <div className="mt-3 flex justify-end items-center space-x-4">

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { apiWithAuth } from "../axios/Instance";
 
-
 const useFetchStudents = () => {
     const [students, setStudents] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
@@ -21,20 +20,41 @@ const useFetchStudents = () => {
                 const response = await api.get("/admin/student"); 
                 console.log("Raw API response:", response.data);
                 
-                // Handle the new response structure
+                // Handle the response structure
                 if (response.data?.data?.students && Array.isArray(response.data.data.students)) {
-                    const studentsData = response.data.data.students.map(student => ({
-                        ...student,
-                        formattedDob: new Date(student.dob).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'long',
-                            year: 'numeric'
-                        }),
-                        formattedClass: student.class || "Not Specified"
-                    }));
+                    const studentsData = response.data.data.students.map(student => {
+                        // Create a flattened student object with user properties at the top level
+                        return {
+                            // Student properties
+                            id: student.id,
+                            user_id: student.user_id,
+                            dob: student.dob,
+                            gender: student.gender,
+                            class: student.class,
+                            address: student.address,
+                            parentage: student.parentage,
+                            alternatePhone: student.alternatePhone,
+                            is_registered: student.is_registered,
+                            createdAt: student.createdAt,
+                            updatedAt: student.updatedAt,
+                            
+                            // User properties (flattened)
+                            name: student.user?.name || "Unknown",
+                            email: student.user?.email || "Not provided",
+                            phone: student.user?.phone || "Not provided",
+                            status: student.user?.status || "Unknown",
+                            
+                            // Formatted fields
+                            formattedDob: new Date(student.dob).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                            })
+                        };
+                    });
                     
                     setStudents(studentsData);
-                    setTotalCount(response.data.data.total || studentsData.length);
+                    setTotalCount(response.data.data.count || studentsData.length);
                 } else {
                     console.warn("Unexpected API response structure:", response.data);
                     setStudents([]);

@@ -14,7 +14,7 @@ const api = axios.create({
 
 // ✅ Authenticated API instance with token handling
 export const apiWithAuth = () => {
-  const token = localStorage.getItem("authToken");
+  const token = localStorage.getItem("adminAuthToken");
 
   const instance = axios.create({
     baseURL: BASE_URL,
@@ -31,10 +31,10 @@ export const apiWithAuth = () => {
       if (error.response && error.response.status === 401) {
         toast.error("Session expired. Redirecting to login...");
 
-        localStorage.removeItem("authToken"); // Clear token
+        localStorage.removeItem("adminAuthToken"); // Clear token
 
         setTimeout(() => {
-          window.location.href = "/"; // Redirect after 2 seconds
+          window.location.href = "/login"; // Redirect after 2 seconds
         }, 2000);
       }
       return Promise.reject(error);

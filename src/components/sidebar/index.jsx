@@ -7,14 +7,20 @@ import {
     Home,
     Users,
     Settings,
-    HelpCircle,
+    LogOut,
+    Book,
+    School,
+    Award,
+    FileText,
+    Clipboard,
     BarChart2,
+    User,
 } from "lucide-react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
-    const [activeLink, setActiveLink] = useState("dashboard");
+    const location = useLocation();
     const [expandedGroups, setExpandedGroups] = useState({
         analytics: false,
         settings: false,
@@ -23,12 +29,19 @@ const Sidebar = () => {
     const iconMap = {
         home: Home,
         users: Users,
+        teachers: Users,
+        schools: School,
+        memberships: Award,
+        classes: Book,
+        tests: Clipboard,
+        worksheets: FileText,
+        performance: BarChart2,
         settings: Settings,
-        help: HelpCircle,
-        chart: BarChart2,
+        account: User,
+        logout: LogOut,
     };
 
-    const sidebarLinks = [
+    const mainMenuLinks = [
         {
             id: "dashboard",
             label: "Dashboard",
@@ -42,52 +55,50 @@ const Sidebar = () => {
             path: "/students",
         },
         {
-            id: "analytics",
-            label: "Analytics",
-            icon: "chart",
-            isGroup: true,
-            children: [
-                {
-                    id: "reports",
-                    label: "Reports",
-                    path: "/analytics/reports",
-                },
-                {
-                    id: "statistics",
-                    label: "Statistics",
-                    path: "/analytics/statistics",
-                },
-                {
-                    id: "performance",
-                    label: "Performance",
-                    path: "/analytics/performance",
-                },
-            ],
+            id: "schools",
+            label: "Schools",
+            icon: "schools",
+            path: "/schools",
         },
         {
-            id: "settings",
-            label: "Settings",
-            icon: "settings",
-            isGroup: true,
-            children: [
-                {
-                    id: "profile",
-                    label: "Profile",
-                    path: "/settings/profile",
-                },
-                {
-                    id: "security",
-                    label: "Security",
-                    path: "/settings/security",
-                },
-            ],
+            id: "memberships",
+            label: "Memberships",
+            icon: "memberships",
+            path: "/memberships",
         },
         {
-            id: "help",
-            label: "Help & Support",
-            icon: "help",
-            path: "/help",
+            id: "classes",
+            label: "Classes",
+            icon: "classes",
+            path: "/classes",
         },
+        {
+            id: "tests",
+            label: "Tests",
+            icon: "tests",
+            path: "/tests",
+        },
+        {
+            id: "worksheets",
+            label: "Worksheets",
+            icon: "worksheets",
+            path: "/worksheets",
+        },
+        {
+            id: "performance",
+            label: "Performance",
+            icon: "performance",
+            path: "/performance",
+        }
+    ];
+
+    const bottomMenuLinks = [
+        {
+            id: "logout",
+            label: "Logout",
+            icon: "logout",
+            path: "/logout",
+        }
     ];
 
     const toggleSidebar = () => {
@@ -101,14 +112,16 @@ const Sidebar = () => {
         }));
     };
 
-    const handleLinkClick = (linkId) => {
-        setActiveLink(linkId);
+    // Check if a link is active based on the current location
+    const isLinkActive = (path) => {
+        return location.pathname === path;
     };
 
     // Render sidebar links recursively
     const renderLinks = (links, level = 0) => {
         return links.map((link) => {
             const IconComponent = iconMap[link.icon];
+            const isActive = isLinkActive(link.path);
 
             if (link.isGroup) {
                 const isExpanded = expandedGroups[link.id];
@@ -116,7 +129,7 @@ const Sidebar = () => {
                     <div key={link.id} className="mb-1">
                         <button
                             onClick={() => toggleGroup(link.id)}
-                            className={`flex items-center w-full px-4 py-2 text-left transition-colors rounded-md hover:bg-gray-700 ${
+                            className={`flex items-center w-full px-4 py-2 text-left transition-colors rounded-md hover:bg-hover ${
                                 isOpen ? "" : "justify-center"
                             }`}
                         >
@@ -150,11 +163,11 @@ const Sidebar = () => {
             return (
                 <button
                     key={link.id}
-                    onClick={() => handleLinkClick(link.id)}
+                    onClick={() => window.location.href = link.path}
                     className={`flex items-center w-full px-4 py-2 mb-1 rounded-md transition-colors ${
-                        activeLink === link.id
-                            ? "bg-blue-600 text-white"
-                            : "text-gray-300 hover:bg-gray-700"
+                        isActive
+                            ? "bg-hover text-white"
+                            : "text-gray-100 hover:bg-hover"
                     } ${isOpen ? "" : "justify-center"}`}
                 >
                     {IconComponent && (
@@ -178,18 +191,23 @@ const Sidebar = () => {
             >
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between h-16 px-4 border-b border-gray-700">
-                    {isOpen && <h1 className="text-xl font-bold">App Name</h1>}
+                    {isOpen && <h1 className="text-xl font-bold">Ace-brainiac Admin</h1>}
                     <button
                         onClick={toggleSidebar}
-                        className="p-1 rounded-md hover:bg-gray-700"
+                        className="p-1 rounded-md hover:bg-hover"
                     >
                         {isOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
                 </div>
 
-                {/* Sidebar Content */}
+                {/* Main Sidebar Content */}
                 <div className="flex-grow p-3 overflow-y-auto">
-                    <nav>{renderLinks(sidebarLinks)}</nav>
+                    <nav>{renderLinks(mainMenuLinks)}</nav>
+                </div>
+
+                {/* Bottom Menu Items */}
+                <div className="p-3 border-t border-gray-700">
+                    <nav>{renderLinks(bottomMenuLinks)}</nav>
                 </div>
 
                 {/* Sidebar Footer */}
@@ -208,7 +226,7 @@ const Sidebar = () => {
             </div>
 
             {/* Main Content */}
-           <Outlet />
+            <Outlet />
         </div>
     );
 };

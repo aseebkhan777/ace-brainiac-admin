@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useAdminLogin from "../../../hooks/useAdminLogin";
 
-
 export default function AdminPortal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
   const { loginAdmin, loading, error } = useAdminLogin();
 
   const handleSubmit = async (e) => {
@@ -17,17 +17,22 @@ export default function AdminPortal() {
       return;
     }
     console.log("Attempting admin login with:", { email, password });
-    await loginAdmin(email, password);
-    // Navigation is handled in the hook
+    const result = await loginAdmin(email, password);
+    if (result && result.statusCode === 200) {
+      // Success already handled in hook with toast
+      setTimeout(() => {
+        navigate("/students");
+      }, 2000);
+    }
   };
-
+  
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#31473A]">
-      <ToastContainer />
-      <div className="bg-[#EEF4F2] rounded-2xl shadow-lg p-8 w-96">
+    <div className="flex items-center justify-center min-h-screen bg-primary">
+      <ToastContainer position="top-right" autoClose={2000} />
+      <div className="bg-gray-100 rounded-2xl shadow-lg p-8 w-96">
         <h2 className="text-2xl font-semibold text-gray-900 text-left">Ace Brainiac</h2>
         <p className="text-sm text-gray-600 font-semibold text-left">Admin Portal</p>
-        
+
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-gray-700 text-sm font-medium">Email</label>
@@ -65,7 +70,7 @@ export default function AdminPortal() {
 
           <button
             type="submit"
-            className="w-full bg-[#31473A] text-white py-2 rounded-md mt-4 hover:bg-[#4a6a57]"
+            className="w-full bg-primary text-white py-2 rounded-md mt-4 hover:bg-hover"
             disabled={loading}
           >
             {loading ? "Logging in..." : "SUBMIT"}
@@ -73,13 +78,13 @@ export default function AdminPortal() {
         </form>
 
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-        
+
         <div className="flex items-center my-4">
           <hr className="flex-grow border-gray-300" />
           <span className="mx-2 text-sm text-gray-500">or</span>
           <hr className="flex-grow border-gray-300" />
         </div>
-        
+
         <div className="text-center text-sm text-gray-600">
           <p>
             <span className="font-semibold">Need help accessing your account?</span>{" "}

@@ -1,7 +1,7 @@
 import React from "react";
 import Input from "./Input";
 import { Search } from "lucide-react";
-import DateFilter from "./DateFilter"; // Fixed typo in import name
+import DateFilter from "./DateFilter";
 
 export default function InnerCard({ 
   children,
@@ -19,12 +19,8 @@ export default function InnerCard({
     label: "Filter 1",
     options: []
   },
-  secondDropdownProps = null, // ✅ Set default to null (optional)
-  dateFilterProps = {
-    selectedDate: "",
-    onDateChange: () => {},
-    label: "Date"
-  },
+  secondDropdownProps = null, // Optional second filter
+  dateFilterProps = null, // Make this optional too
   showDivider = true
 }) {
   return (
@@ -33,11 +29,11 @@ export default function InnerCard({
       {showFilters && (
         <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
           {/* Search Input */}
-          <div className="relative w-[50%]">
+          <div className="relative w-full md:w-[50%]">
             <Input
               placeholder={searchProps.placeholder}
               value={searchProps.value}
-              onChange={searchProps.onChange}
+              onChange={searchProps.onChange} // Use the provided onChange directly
               className="w-full pr-10"
             />
             {searchProps.showSearchIcon && (
@@ -45,43 +41,45 @@ export default function InnerCard({
             )}
           </div>
           
-          {/* First Dropdown (Class) */}
+          {/* First Dropdown (required) */}
           <select
             className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
             value={firstDropdownProps.value}
-            onChange={(e) => firstDropdownProps.onChange(e.target.value)}
+            onChange={firstDropdownProps.onChange} // Use the provided onChange directly
           >
             <option value="">{firstDropdownProps.label}</option>
-            {firstDropdownProps.options.map((option, index) => (
-              <option key={index} value={option.value}>
-                {option.label}
+            {Array.isArray(firstDropdownProps.options) && firstDropdownProps.options.map((option, index) => (
+              <option key={index} value={option.value || option}>
+                {option.label || option}
               </option>
             ))}
           </select>
 
-          {/* Second Dropdown (Subject) - ✅ Render only if props exist */}
+          {/* Second Dropdown (optional) */}
           {secondDropdownProps && (
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
               value={secondDropdownProps.value}
-              onChange={(e) => secondDropdownProps.onChange(e.target.value)}
+              onChange={secondDropdownProps.onChange} // Use the provided onChange directly
             >
               <option value="">{secondDropdownProps.label}</option>
-              {secondDropdownProps.options.map((option, index) => (
-                <option key={index} value={option.value}>
-                  {option.label}
+              {Array.isArray(secondDropdownProps.options) && secondDropdownProps.options.map((option, index) => (
+                <option key={index} value={option.value || option}>
+                  {option.label || option}
                 </option>
               ))}
             </select>
           )}
 
-          {/* Date Filter Component */}
-          <DateFilter
-            label={dateFilterProps.label}
-            selectedDate={dateFilterProps.selectedDate}
-            onDateChange={dateFilterProps.onDateChange}
-            className="w-full md:w-auto"
-          />
+          {/* Date Filter Component (optional) */}
+          {dateFilterProps && (
+            <DateFilter
+              label={dateFilterProps.label}
+              selectedDate={dateFilterProps.selectedDate}
+              onDateChange={dateFilterProps.onDateChange}
+              className="w-full md:w-auto"
+            />
+          )}
         </div>
       )}
       

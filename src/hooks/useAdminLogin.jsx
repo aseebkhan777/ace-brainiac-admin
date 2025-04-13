@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { apiWithAuth } from "../axios/Instance";
 
 const useAdminLogin = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const navigate = useNavigate();
 
     const loginAdmin = async (email, password) => {
         setLoading(true);
@@ -21,7 +19,7 @@ const useAdminLogin = () => {
                 console.log("Token received:", token);
                 localStorage.setItem("adminAuthToken", token);
                 
-                // Check user status and handle navigation
+                // Check user status
                 if (user_details && user_details.status === "ACTIVE") {
                     // For active admin users
                     toast.success("Admin login successful", {
@@ -29,29 +27,20 @@ const useAdminLogin = () => {
                         autoClose: 2000,
                     });
                     
-                    setTimeout(() => {
-                        navigate("/admin/dashboard");
-                    }, 2000);
-                } else {
-                    // For inactive admin users
-                    toast.warning("Account verification required", {
-                        position: "top-right",
-                        autoClose: 2000,
-                    });
-                    
-                    setTimeout(() => {
-                        navigate("/admin/verification");
-                    }, 2000);
+                    return response.data;
                 }
-                
-                return response.data;
             } else {
                 setError(response.data.message || "Invalid response from server");
+                toast.error(response.data.message || "Invalid response from server", {
+                    position: "top-right",
+                    autoClose: 2000,
+                });
                 return null;
             }
         } catch (err) {
-            setError(err.response?.data?.message || err.message || "Admin login failed");
-            toast.error(err.response?.data?.message || "Admin login failed", {
+            const errorMessage = err.response?.data?.message || err.message || "Admin login failed";
+            setError(errorMessage);
+            toast.error(errorMessage, {
                 position: "top-right",
                 autoClose: 2000,
             });

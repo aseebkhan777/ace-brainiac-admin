@@ -24,14 +24,55 @@ export default function StudentsPage() {
         { value: "Class2", label: "Class 2" }
     ];
 
+    // Helper function to normalize dates for comparison
+    const formatDateForComparison = (dateStr) => {
+        if (!dateStr) return "";
+        
+        // Handle different date formats
+        let date;
+        
+        // If it's in format "01 February 2000"
+        if (dateStr.includes(" ")) {
+            const parts = dateStr.split(" ");
+            const months = {
+                "January": "01", "February": "02", "March": "03", "April": "04",
+                "May": "05", "June": "06", "July": "07", "August": "08",
+                "September": "09", "October": "10", "November": "11", "December": "12"
+            };
+            const day = parts[0].padStart(2, '0');
+            const month = months[parts[1]];
+            const year = parts[2];
+            date = `${day}/${month}/${year}`;
+        } 
+        // If it's already in format "DD/MM/YYYY"
+        else if (dateStr.includes("/")) {
+            date = dateStr;
+        }
+        // If it's in another format, you may need to add more conditions
+        
+        return date;
+    };
+
     // Filter students based on search and dropdown filters
-    const filteredStudents = students.filter(student =>
-        (searchQuery === "" ||
+    const filteredStudents = students.filter(student => {
+        // Search filter
+        const matchesSearch = searchQuery === "" ||
             student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.email.toLowerCase().includes(searchQuery.toLowerCase())) &&
-        (selectedClass === "" || student.class === selectedClass) &&
-        (selectedDate === "" || student.formattedDob.includes(selectedDate))
-    );
+            student.email.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // Class filter
+        const matchesClass = selectedClass === "" || student.class === selectedClass;
+        
+        // Date filter
+        let matchesDate = true;
+        if (selectedDate !== "") {
+            const studentFormattedDate = formatDateForComparison(student.formattedDob);
+            const selectedFormattedDate = formatDateForComparison(selectedDate);
+            matchesDate = studentFormattedDate === selectedFormattedDate;
+        }
+        
+        return matchesSearch && matchesClass && matchesDate;
+    });
 
     // Pagination logic
     const itemsPerPage = 6;
@@ -47,12 +88,19 @@ export default function StudentsPage() {
 
     const handleViewStudent = (studentId) => {
         // Navigate to the student details page with the ID as a URL parameter
-        navigate(`/school/students/${studentId}`);
+        navigate(`/students/${studentId}`);
+    };
+
+    const handleDateChange = (date) => {
+        // Make sure we're setting the date in a consistent format
+        setSelectedDate(date);
+        
+        // Reset to first page when changing filter
+        setPage(1);
     };
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-
             {/* Main Content */}
             <div className="flex-1 flex flex-col bg-white">
                 <OuterCard
@@ -63,19 +111,25 @@ export default function StudentsPage() {
                     <InnerCard
                         searchProps={{
                             value: searchQuery,
-                            onChange: (e) => setSearchQuery(e.target.value),
+                            onChange: (e) => {
+                                setSearchQuery(e.target.value);
+                                setPage(1); // Reset to first page when searching
+                            },
                             placeholder: "Search students...",
                             showSearchIcon: true
                         }}
                         firstDropdownProps={{
                             value: selectedClass,
-                            onChange: (e) => setSelectedClass(e.target.value),
+                            onChange: (e) => {
+                                setSelectedClass(e.target.value);
+                                setPage(1); // Reset to first page when filtering
+                            },
                             label: "Class",
                             options: classOptions
                         }}
                         dateFilterProps={{
                             selectedDate: selectedDate,
-                            onDateChange: setSelectedDate,
+                            onDateChange: handleDateChange,
                             label: "Birth Date"
                         }}
                     >
@@ -102,9 +156,9 @@ export default function StudentsPage() {
                                         <div className="flex justify-between items-center pb-2">
                                             <h3 className="text-sm font-semibold">{student.name}</h3>
                                             <span className={`text-xs px-2 py-1 rounded-full ${student.status === 'Active' ? 'bg-green-100 text-green-800' :
-                                                student.status === 'Inactive' ? 'bg-yellow-100 text-yellow-800' :
-                                                    student.status === 'Suspended' ? 'bg-red-100 text-red-800' :
-                                                        'bg-gray-100 text-gray-800'
+                                                    student.status === 'Inactive' ? 'bg-yellow-100 text-yellow-800' :
+                                                        student.status === 'Suspended' ? 'bg-red-100 text-red-800' :
+                                                            'bg-gray-100 text-gray-800'
                                                 }`}>
                                                 {student.status || 'Unknown'}
                                             </span>
@@ -125,9 +179,6 @@ export default function StudentsPage() {
                                             </p>
                                             <p className="text-xs">
                                                 <span className="font-medium">Phone:</span> {student.phone || 'Not provided'}
-                                            </p>
-                                            <p className="text-xs">
-                                                <span className="font-medium">Address:</span> {student.address || 'Not provided'}
                                             </p>
                                         </div>
 
@@ -155,11 +206,11 @@ export default function StudentsPage() {
                             >
                                 <ChevronLeft size={16} />
                             </Button>
-                            <span className="text-sm">{page} of {totalPages}</span>
+                            <span className="text-sm">{page} of {totalPages || 1}</span>
                             <Button
                                 variant="outline"
                                 onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages}
+                                disabled={page === totalPages || totalPages === 0}
                                 className="px-2 py-1"
                             >
                                 <ChevronRight size={16} />
