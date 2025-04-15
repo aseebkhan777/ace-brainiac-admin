@@ -1,24 +1,37 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchClasses from "../../hooks/useFetchClasses";
+import useAddClass from "../../hooks/useAddClass";
+import useDeleteClass from "../../hooks/useDeleteClass";
+import AddClassModal from "../../components/modal";
 
 export default function ClassesPage() {
     const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const navigate = useNavigate();
 
     // Fetch classes using the custom hook
-    const { classes = [], loading, error } = useFetchClasses();
+    const { classes = [], loading, error } = useFetchClasses(refreshKey);
+
+    // Add class hook
+    const { addClass, loading: addLoading } = useAddClass();
+
+    // Delete class hook
+    const { deleteClass, loading: deleteLoading } = useDeleteClass();
 
     // Filter classes based on search
     const filteredClasses = classes.filter(classItem =>
-        searchQuery === "" || 
+        searchQuery === "" ||
         classItem.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -31,16 +44,32 @@ export default function ClassesPage() {
     );
 
     const handleAddClass = () => {
-        navigate("/classes/create");
+        setIsModalOpen(true);
     };
 
-    const handleViewClass = (classId) => {
-        // Navigate to the class details page with the ID as a URL parameter
-        navigate(`/classes/${classId}`);
+    const handleAddClassSubmit = async (className) => {
+        const result = await addClass(className);
+        if (result) {
+            // Refresh the classes list after adding
+            setRefreshKey(prev => prev + 1);
+        }
+        return result;
+    };
+
+    const handleDeleteClass = async (classId) => {
+        if (window.confirm("Are you sure you want to delete this class?")) {
+            const result = await deleteClass(classId);
+            if (result) {
+                // Refresh the classes list after deletion
+                setRefreshKey(prev => prev + 1);
+            }
+        }
     };
 
     return (
         <div className="flex min-h-screen bg-gray-100">
+            {/* Toast Container for notifications */}
+            <ToastContainer position="top-right" autoClose={3000} />
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col bg-white">
@@ -74,7 +103,7 @@ export default function ClassesPage() {
                                 {paginatedClasses.map((classItem) => (
                                     <Card
                                         key={classItem.id}
-                                        height="h-[220px]"
+                                        height="h-[170px]"
                                         className="bg-secondary w-full border-secondary"
                                     >
                                         <div className="flex justify-between items-center pb-2">
@@ -94,13 +123,14 @@ export default function ClassesPage() {
                                             </p>
                                         </div>
 
-                                        <div className="flex justify-center gap-2 mt-3">
+                                        <div className="flex justify-center gap-2 mt-3 mb-2">
                                             <Button
-                                                variant="secondary"
-                                                className="mt-3 w-full text-xs"
-                                                onClick={() => handleViewClass(classItem.id)}
+                                                variant="delete"
+                                                className="mt-3 w-full text-xs flex items-center justify-center gap-1"
+                                                onClick={() => handleDeleteClass(classItem.id)}
+                                                disabled={deleteLoading}
                                             >
-                                                View Details
+                                                <Trash2 size={14} /> Delete
                                             </Button>
                                         </div>
                                     </Card>
@@ -131,6 +161,13 @@ export default function ClassesPage() {
                     </InnerCard>
                 </OuterCard>
             </div>
+
+            {/* Add Class Modal */}
+            <AddClassModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onAddSuccess={handleAddClassSubmit}
+            />
         </div>
     );
 }

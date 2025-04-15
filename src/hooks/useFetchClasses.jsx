@@ -1,20 +1,16 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { apiWithAuth } from "../axios/Instance";
 
-const useFetchClasses = () => {
+const useFetchClasses = (refreshKey = 0) => {
     const [classes, setClasses] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const requestMadeRef = useRef(false);
 
     useEffect(() => {
-        if (requestMadeRef.current) return;
-        
         const fetchClasses = async () => {
             setLoading(true);
             setError(null);
             try {
-                requestMadeRef.current = true;
                 const api = apiWithAuth();
                 const response = await api.get("/admin/class"); // Adjust endpoint as needed
                 console.log("Raw API response:", response.data);
@@ -57,7 +53,7 @@ const useFetchClasses = () => {
         };
 
         fetchClasses();
-    }, []);
+    }, [refreshKey]); // Added refreshKey as a dependency
 
     return { classes, loading, error };
 };

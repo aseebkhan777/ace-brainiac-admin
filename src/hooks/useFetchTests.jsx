@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { apiWithAuth } from "../axios/Instance";
 
-
 const useFetchTests = () => {
     const [tests, setTests] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -15,26 +14,25 @@ const useFetchTests = () => {
         const fetchTests = async () => {
             setLoading(true);
             setError(null);
+            
             try {
                 requestMadeRef.current = true;
                 const api = apiWithAuth();
                 const response = await api.get("/admin/test"); 
                 
-                if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
-                    // Handle the case where data is nested inside data
-                    const testsData = response.data.data.data.map(test => ({
-                        ...test,
-                        status: test.status === "DRAFT" ? "Draft" : "Published",
-                        certificationAvailable: test.certification_available
-                    }));
-                    
-                    setTests(testsData);
-                } else if (response.data?.data && Array.isArray(response.data.data)) {
-                    // Handle the case shown in your error message
+                if (response.data?.data && Array.isArray(response.data.data)) {
+                    // Map response data to match the expected format in your UI
                     const testsData = response.data.data.map(test => ({
-                        ...test,
+                        id: test.id,
+                        name: test.title,
+                        description: `${test.subject || ''} - ${test.class || ''}`,
                         status: test.status === "DRAFT" ? "Draft" : "Published",
-                        certificationAvailable: test.certification_available
+                        certificationAvailable: test.certificationAvailable,
+                        total_questions: test.questions?.length || 0,
+                        duration: test.duration || null,
+                        pass_percentage: test.pass_percentage || test.totalMarks,
+                        created_by: test.created_by || "Admin",
+                        createdAt: test.createdAt
                     }));
                     
                     setTests(testsData);

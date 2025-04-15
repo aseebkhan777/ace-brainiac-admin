@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, School, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, School, MapPin, User } from "lucide-react";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
@@ -103,10 +103,9 @@ export default function SchoolsPage() {
                                     >
                                         <div className="flex justify-between items-center pb-2">
                                             <h3 className="text-sm font-semibold truncate">{school.schoolName}</h3>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${
-                                                school.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                                                'bg-yellow-100 text-yellow-800'
-                                            }`}>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${school.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
                                                 {school.status}
                                             </span>
                                         </div>
@@ -122,8 +121,9 @@ export default function SchoolsPage() {
                                                 <span className="font-medium mr-2">Enrollment:</span>
                                                 {school.enrollmentStrength || 'N/A'} students
                                             </p>
-                                            <p className="text-xs">
-                                                <span className="font-medium ml-3 mr-2">Principal:</span>
+                                            <p className="text-xs flex items-center">
+                                                <User size={14} className="mr-1 text-gray-500" />
+                                                <span className="font-medium mr-2">Principal:</span>
                                                 {school.principalName || 'N/A'}
                                             </p>
                                         </div>

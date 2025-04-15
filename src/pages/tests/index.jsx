@@ -6,14 +6,14 @@ import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchTests from "../../hooks/useFetchTests";
-import useCreateTest from "../../hooks/useCreateTests"; // Import the hook
+import useCreateTest from "../../hooks/useCreateTests";
 
 export default function TestsPage() {
     const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("");
     const [selectedCertification, setSelectedCertification] = useState("");
-    const [dateFilter, setDateFilter] = useState("");  // Add date filter state
+    const [dateFilter, setDateFilter] = useState("");
 
     const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ export default function TestsPage() {
         // Basic filters (search, status, certification)
         const basicFiltersPassed = (
             (searchQuery === "" ||
-                test.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                test.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 test.description?.toLowerCase().includes(searchQuery.toLowerCase())) &&
             (selectedStatus === "" || test.status === selectedStatus) &&
             (selectedCertification === "" || 
@@ -64,22 +64,18 @@ export default function TestsPage() {
         page * itemsPerPage
     );
 
-    // Updated to use the createTest hook
+    // Handle test creation
     const handleAddTest = async () => {
         try {
-            console.log("Creating test..."); // Debug log
             const testId = await createTest();
-            console.log("Test created with ID:", testId); // Debug log
             
             if (testId) {
                 navigate(`/tests/create/${testId}`);
             } else {
                 console.error("No test ID returned from createTest");
-                // Optionally show an error message to the user
             }
         } catch (err) {
             console.error("Error creating test:", err);
-            // Handle the error appropriately, perhaps show an error message
         }
     };
 
@@ -89,7 +85,6 @@ export default function TestsPage() {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-
             {/* Main Content */}
             <div className="flex-1 flex flex-col bg-white">
                 <OuterCard
@@ -168,33 +163,30 @@ export default function TestsPage() {
                                         </div>
 
                                         <div className="space-y-1">
+                                            {/* Display class and subject as description */}
                                             <p className="text-xs flex items-center">
                                                 <FileText size={12} className="mr-1 text-gray-500" />
-                                                <span className="font-medium mr-2">Description:</span>
+                                                <span className="font-medium mr-2">Details:</span>
                                                 <span className="truncate">{test.description || "No description"}</span>
                                             </p>
-                                            <p className="text-xs flex items-center">
-                                                <Calendar size={12} className="mr-1 text-gray-500" />
-                                                <span className="font-medium mr-2">Duration:</span>
-                                                {test.duration || "Not specified"} minutes
+                                            
+                                            {/* Display total marks */}
+                                            <p className="text-xs">
+                                                <span className="font-medium ml-3 mr-2">Total Marks:</span>
+                                                {test.pass_percentage || "N/A"}
                                             </p>
-                                            <p className="text-xs flex items-center">
-                                                <User size={12} className="mr-1 text-gray-500" />
-                                                <span className="font-medium mr-2">Created By:</span>
-                                                {test.created_by || "Admin"}
-                                            </p>
+                                            
+                                            {/* Display certification availability */}
                                             <p className="text-xs flex items-center">
                                                 <CheckCircle size={12} className="mr-1 text-gray-500" />
                                                 <span className="font-medium mr-2">Certification:</span>
                                                 {test.certificationAvailable ? "Available" : "Not Available"}
                                             </p>
+                                            
+                                            {/* Display question count */}
                                             <p className="text-xs">
                                                 <span className="font-medium ml-3 mr-2">Questions:</span>
                                                 {test.total_questions || "0"} questions
-                                            </p>
-                                            <p className="text-xs">
-                                                <span className="font-medium ml-3 mr-2">Pass Score:</span>
-                                                {test.pass_percentage || "N/A"}%
                                             </p>
                                         </div>
 

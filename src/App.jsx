@@ -13,6 +13,9 @@ import SchoolsPage from './pages/schools'
 import CreateSchool from './pages/schools/create'
 import TestsPage from './pages/tests'
 import CreateTests from './pages/tests/create'
+import MembershipsPage from './pages/membership'
+import CreateMembership from './pages/membership/create'
+import SchoolDetails from './pages/schools/veiw'
 
 
 function App() {
@@ -69,6 +72,11 @@ function App() {
             <CreateSchool/>
           </Layout>
         }/>
+        <Route path='/schools/:id' element={
+          <Layout>
+            <SchoolDetails/>
+          </Layout>
+        }/>
         <Route path='/tests' element={
           <Layout>
             <TestsPage/>
@@ -79,6 +87,17 @@ function App() {
             <CreateTests/>
           </Layout>
         }/>
+         <Route path='/memberships' element={
+          <Layout>
+            <MembershipsPage/>
+          </Layout>
+        }/>
+         <Route path='/memberships/create' element={
+          <Layout>
+            <CreateMembership/>
+          </Layout>
+        }/>
+
           
         {/* Make sure the wildcard route comes last */}
         <Route path='*' element={<NotFound />} />
