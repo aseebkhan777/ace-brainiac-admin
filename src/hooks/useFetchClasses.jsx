@@ -12,7 +12,7 @@ const useFetchClasses = (refreshKey = 0) => {
             setError(null);
             try {
                 const api = apiWithAuth();
-                const response = await api.get("/admin/class"); // Adjust endpoint as needed
+                const response = await api.get("/persona/classes"); // Adjust endpoint as needed
                 console.log("Raw API response:", response.data);
                 
                 if (response.data?.data && Array.isArray(response.data.data)) {

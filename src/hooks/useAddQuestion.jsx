@@ -21,7 +21,7 @@ const useAddQuestion = () => {
     
     try {
       const api = apiWithAuth();
-      const response = await api.post(`/admin/test/${testId}/bulk-questions`, questionsData);
+      const response = await api.put(`/admin/test/${testId}/bulk-questions`, questionsData);
       console.log("API Response:", response.data);
       return true; // Success
     } catch (err) {

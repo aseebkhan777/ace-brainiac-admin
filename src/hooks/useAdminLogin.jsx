@@ -15,20 +15,16 @@ const useAdminLogin = () => {
             console.log("Response from backend:", response.data);
 
             if (response.data.statusCode === 200 && response.data.data?.token) {
-                const { token, user_details } = response.data.data;  
+                const { token } = response.data.data;
                 console.log("Token received:", token);
                 localStorage.setItem("adminAuthToken", token);
-                
-                // Check user status
-                if (user_details && user_details.status === "ACTIVE") {
-                    // For active admin users
-                    toast.success("Admin login successful", {
-                        position: "top-right",
-                        autoClose: 2000,
-                    });
-                    
-                    return response.data;
-                }
+
+                toast.success("Admin login successful", {
+                    position: "top-right",
+                    autoClose: 2000,
+                });
+
+                return response.data;
             } else {
                 setError(response.data.message || "Invalid response from server");
                 toast.error(response.data.message || "Invalid response from server", {

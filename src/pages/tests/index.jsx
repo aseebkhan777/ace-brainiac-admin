@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, FileText, Calendar, User, CheckCircle, Loader } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Calendar, User, CheckCircle, Loader, Trash2 } from "lucide-react";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchTests from "../../hooks/useFetchTests";
 import useCreateTest from "../../hooks/useCreateTests";
+import useDeleteTest from "../../hooks/useDeteleTests";
+import { LoadingSpinner } from "../../components/Loader";
 
 export default function TestsPage() {
     const [page, setPage] = useState(1);
@@ -18,9 +20,11 @@ export default function TestsPage() {
     const navigate = useNavigate();
 
     // Fetch tests using the custom hook
-    const { tests = [], loading, error } = useFetchTests();
+    const { tests = [], loading, error, fetchTests } = useFetchTests();
     // Add the createTest hook
     const { createTest, loading: creatingTest, error: createError } = useCreateTest();
+    // Add the deleteTest hook
+    const { deleteTest, loading: deletingTest, error: deleteError } = useDeleteTest();
 
     // Prepare dropdown options
     const statusOptions = [
@@ -41,18 +45,18 @@ export default function TestsPage() {
                 test.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 test.description?.toLowerCase().includes(searchQuery.toLowerCase())) &&
             (selectedStatus === "" || test.status === selectedStatus) &&
-            (selectedCertification === "" || 
-             (selectedCertification === "true" && test.certificationAvailable) ||
-             (selectedCertification === "false" && !test.certificationAvailable))
+            (selectedCertification === "" ||
+                (selectedCertification === "true" && test.certificationAvailable) ||
+                (selectedCertification === "false" && !test.certificationAvailable))
         );
-        
+
         // Date filter
         if (dateFilter && basicFiltersPassed) {
             const filterDate = new Date(dateFilter).setHours(0, 0, 0, 0);
             const testDate = new Date(test.createdAt).setHours(0, 0, 0, 0);
             return testDate === filterDate;
         }
-        
+
         return basicFiltersPassed;
     });
 
@@ -68,7 +72,7 @@ export default function TestsPage() {
     const handleAddTest = async () => {
         try {
             const testId = await createTest();
-            
+
             if (testId) {
                 navigate(`/tests/create/${testId}`);
             } else {
@@ -80,7 +84,24 @@ export default function TestsPage() {
     };
 
     const handleViewTest = (testId) => {
-        navigate(`/tests/${testId}`);
+        navigate(`/tests/create/${testId}`);
+    };
+
+    // Handle test deletion
+    const handleDeleteTest = async (testId, e) => {
+        e.stopPropagation(); // Prevent triggering other click events
+
+        if (window.confirm("Are you sure you want to delete this test? This action cannot be undone.")) {
+            try {
+                const success = await deleteTest(testId);
+                if (success) {
+                    // Refresh the tests list after successful deletion
+                    fetchTests();
+                }
+            } catch (err) {
+                console.error("Error deleting test:", err);
+            }
+        }
     };
 
     return (
@@ -129,12 +150,12 @@ export default function TestsPage() {
                         }}
                     >
                         {/* Loading State */}
-                        {loading && <div className="text-center py-4">Loading tests...</div>}
+                        {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
-                        {(error || createError) && 
+                        {(error || createError || deleteError) &&
                             <div className="text-red-500 text-center py-4">
-                                {error || createError}
+                                {error || createError || deleteError}
                             </div>
                         }
 
@@ -154,10 +175,9 @@ export default function TestsPage() {
                                     >
                                         <div className="flex justify-between items-center pb-2">
                                             <h3 className="text-sm font-semibold truncate">{test.name}</h3>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${
-                                                test.status === 'Published' ? 'bg-green-100 text-green-800' :
-                                                'bg-yellow-100 text-yellow-800'
-                                            }`}>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${test.status === 'Published' ? 'bg-green-100 text-green-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
                                                 {test.status}
                                             </span>
                                         </div>
@@ -169,20 +189,20 @@ export default function TestsPage() {
                                                 <span className="font-medium mr-2">Details:</span>
                                                 <span className="truncate">{test.description || "No description"}</span>
                                             </p>
-                                            
+
                                             {/* Display total marks */}
                                             <p className="text-xs">
                                                 <span className="font-medium ml-3 mr-2">Total Marks:</span>
                                                 {test.pass_percentage || "N/A"}
                                             </p>
-                                            
+
                                             {/* Display certification availability */}
                                             <p className="text-xs flex items-center">
                                                 <CheckCircle size={12} className="mr-1 text-gray-500" />
                                                 <span className="font-medium mr-2">Certification:</span>
                                                 {test.certificationAvailable ? "Available" : "Not Available"}
                                             </p>
-                                            
+
                                             {/* Display question count */}
                                             <p className="text-xs">
                                                 <span className="font-medium ml-3 mr-2">Questions:</span>
@@ -195,13 +215,21 @@ export default function TestsPage() {
                                             Created: {test.createdAt ? new Date(test.createdAt).toLocaleDateString() : "Unknown date"}
                                         </p>
 
-                                        <div className="flex justify-center gap-2 mt-3">
+                                        <div className="flex justify-between gap-2 mt-3">
                                             <Button
                                                 variant="secondary"
-                                                className="mt-3 w-full text-xs"
+                                                className="mt-3 w-3/4 text-xs"
                                                 onClick={() => handleViewTest(test.id)}
                                             >
                                                 View Details
+                                            </Button>
+                                            <Button
+                                                variant="delete"
+                                                className="mt-3 w-1/4 text-xs flex justify-center items-center"
+                                                onClick={(e) => handleDeleteTest(test.id, e)}
+                                                disabled={deletingTest}
+                                            >
+                                                <Trash2 size={16} />
                                             </Button>
                                         </div>
                                     </Card>

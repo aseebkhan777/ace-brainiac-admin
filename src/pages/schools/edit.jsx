@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Input from "../../components/Input";
 import useFetchSchool from "../../hooks/useFetchSchool";
-import { MapPin, School, User, Phone, Mail, Users } from "lucide-react";
+import { MapPin, School, User, Phone, Mail, Users, Briefcase } from "lucide-react";
+import { LoadingSpinner } from "../../components/Loader";
 
-const SchoolDetails = () => {
+const SchoolEdit = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
@@ -49,6 +50,8 @@ const SchoolDetails = () => {
                 return 'bg-green-500';
             case 'SUSPENDED':
                 return 'bg-yellow-500';
+            case 'BLACKLISTED':
+                return 'bg-red-500';
             default:
                 return 'bg-gray-500';
         }
@@ -92,7 +95,7 @@ const SchoolDetails = () => {
 
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <p>Loading school data...</p>
+                        <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>
                     </div>
                 ) : (
                     <div className="shadow-md rounded-xl mt-6 flex flex-col lg:flex-row items-center lg:items-stretch justify-center py-8 px-8 lg:px-14 bg-[#EEF4F2]">
@@ -130,28 +133,12 @@ const SchoolDetails = () => {
 
                                 <div>
                                     <label className="block text-gray-600 text-sm font-semibold mb-1">City</label>
-                                    {isEditing ? (
-                                        <Input
-                                            value={school.city}
-                                            onChange={handleInputChange("city")}
-                                            className="w-full"
-                                        />
-                                    ) : (
-                                        <Input value={school.city} readOnly className="w-full bg-[#EEF4F2]" />
-                                    )}
+                                    <Input value={school.city} readOnly className="w-full bg-[#EEF4F2]" />
                                 </div>
 
                                 <div>
                                     <label className="block text-gray-600 text-sm font-semibold mb-1">State</label>
-                                    {isEditing ? (
-                                        <Input
-                                            value={school.state}
-                                            onChange={handleInputChange("state")}
-                                            className="w-full"
-                                        />
-                                    ) : (
-                                        <Input value={school.state} readOnly className="w-full bg-[#EEF4F2]" />
-                                    )}
+                                    <Input value={school.state} readOnly className="w-full bg-[#EEF4F2]" />
                                 </div>
 
                                 <div>
@@ -165,7 +152,7 @@ const SchoolDetails = () => {
                                         <Input
                                             value={school.enrollmentStrength}
                                             onChange={handleInputChange("enrollmentStrength")}
-                                            className="w-full"
+                                            className="w-full bg-white"
                                             type="number"
                                         />
                                     ) : (
@@ -174,8 +161,74 @@ const SchoolDetails = () => {
                                 </div>
 
                                 <div>
+                                    <label className="block text-gray-600 text-sm font-semibold mb-1">
+                                        Enrollment Type
+                                    </label>
+                                    <Input value={school.enrollmentStrengthType} readOnly className="w-full bg-[#EEF4F2]" />
+                                </div>
+
+                                <div>
                                     <label className="block text-gray-600 text-sm font-semibold mb-1">Status</label>
                                     <Input value={school.status} readOnly className="w-full bg-[#EEF4F2]" />
+                                </div>
+                            </div>
+
+                            {/* Coordinator Information */}
+                            <div className="mt-6">
+                                <h3 className="text-md font-semibold mb-3">Coordinator Information</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-gray-600 text-sm font-semibold mb-1">
+                                            <div className="flex items-center">
+                                                <User size={16} className="mr-1" />
+                                                Coordinator Name
+                                            </div>
+                                        </label>
+                                        {isEditing ? (
+                                            <Input
+                                                value={school.coordinatorName}
+                                                onChange={handleInputChange("coordinatorName")}
+                                                className="w-full bg-white"
+                                            />
+                                        ) : (
+                                            <Input value={school.coordinatorName} readOnly className="w-full bg-[#EEF4F2]" />
+                                        )}
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-gray-600 text-sm font-semibold mb-1">
+                                            <div className="flex items-center">
+                                                <Phone size={16} className="mr-1" />
+                                                Coordinator Phone
+                                            </div>
+                                        </label>
+                                        <Input value={school.coordinatorPhone} readOnly className="w-full bg-[#EEF4F2]" />
+                                    </div>
+                                    
+                                    <div className="md:col-span-2">
+                                        <label className="block text-gray-600 text-sm font-semibold mb-1">
+                                            <div className="flex items-center">
+                                                <Mail size={16} className="mr-1" />
+                                                Coordinator Email
+                                            </div>
+                                        </label>
+                                        <Input value={school.coordinatorEmail} readOnly className="w-full bg-[#EEF4F2]" />
+                                    </div>
+                                    
+                                    <div className="md:col-span-2">
+                                        <label className="block text-gray-600 text-sm font-semibold mb-1">
+                                            <div className="flex items-center">
+                                                <Briefcase size={16} className="mr-1" />
+                                                Account Status
+                                            </div>
+                                        </label>
+                                        <div className="flex items-center">
+                                            <Input value={school.user?.status || ""} readOnly className="w-full bg-[#EEF4F2]" />
+                                            <span className={`ml-2 ${getStatusColor(school.user?.status)} text-white text-sm px-3 py-1 rounded-full`}>
+                                                {school.user?.status || 'Unknown'}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -194,7 +247,7 @@ const SchoolDetails = () => {
                                             <Input
                                                 value={school.principalName}
                                                 onChange={handleInputChange("principalName")}
-                                                className="w-full"
+                                                className="w-full bg-white"
                                             />
                                         ) : (
                                             <Input value={school.principalName} readOnly className="w-full bg-[#EEF4F2]" />
@@ -208,15 +261,7 @@ const SchoolDetails = () => {
                                                 Principal Phone
                                             </div>
                                         </label>
-                                        {isEditing ? (
-                                            <Input
-                                                value={school.principalPhone}
-                                                onChange={handleInputChange("principalPhone")}
-                                                className="w-full"
-                                            />
-                                        ) : (
-                                            <Input value={school.principalPhone} readOnly className="w-full bg-[#EEF4F2]" />
-                                        )}
+                                        <Input value={school.principalPhone} readOnly className="w-full bg-[#EEF4F2]" />
                                     </div>
 
                                     <div className="md:col-span-2">
@@ -230,7 +275,7 @@ const SchoolDetails = () => {
                                             <Input
                                                 value={school.principalEmail}
                                                 onChange={handleInputChange("principalEmail")}
-                                                className="w-full"
+                                                className="w-full bg-white"
                                                 type="email"
                                             />
                                         ) : (
@@ -285,4 +330,4 @@ const SchoolDetails = () => {
     );
 };
 
-export default SchoolDetails;
+export default SchoolEdit;

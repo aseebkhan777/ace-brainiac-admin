@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchMemberships from "../../hooks/useFetchMemberships";
+import { LoadingSpinner } from "../../components/Loader";
 
 export default function MembershipsPage() {
     const [page, setPage] = useState(1);
@@ -132,7 +133,7 @@ const filteredMemberships = memberships.filter(membership => {
                         }}
                     >
                         {/* Loading State */}
-                        {loading && <div className="text-center py-4">Loading memberships...</div>}
+                        {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
                         {error && <div className="text-red-500 text-center py-4">{error}</div>}

@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchSchools from "../../hooks/useFetchSchools";
+import { LoadingSpinner } from "../../components/Loader";
 
 export default function SchoolsPage() {
     const [page, setPage] = useState(1);
@@ -82,7 +83,7 @@ export default function SchoolsPage() {
                         }}
                     >
                         {/* Loading State */}
-                        {loading && <div className="text-center py-4">Loading schools...</div>}
+                         {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
                         {error && <div className="text-red-500 text-center py-4">{error}</div>}

@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchStudents from "../../hooks/useFetchStudents";
+import { LoadingSpinner } from "../../components/Loader";
 
 export default function StudentsPage() {
     const [page, setPage] = useState(1);
@@ -17,12 +18,6 @@ export default function StudentsPage() {
 
     // Fetch students using the custom hook
     const { students = [], loading, error } = useFetchStudents();
-
-    // Prepare dropdown options
-    const classOptions = [
-        { value: "Class1", label: "Class 1" },
-        { value: "Class2", label: "Class 2" }
-    ];
 
     // Helper function to normalize dates for comparison
     const formatDateForComparison = (dateStr) => {
@@ -118,14 +113,14 @@ export default function StudentsPage() {
                             placeholder: "Search students...",
                             showSearchIcon: true
                         }}
-                        firstDropdownProps={{
+                        classDropdownProps={{
                             value: selectedClass,
-                            onChange: (e) => {
-                                setSelectedClass(e.target.value);
+                            onChange: (value) => {
+                                setSelectedClass(value);
                                 setPage(1); // Reset to first page when filtering
                             },
-                            label: "Class",
-                            options: classOptions
+                            placeholder: "Filter by class...",
+                        
                         }}
                         dateFilterProps={{
                             selectedDate: selectedDate,
@@ -134,7 +129,7 @@ export default function StudentsPage() {
                         }}
                     >
                         {/* Loading State */}
-                        {loading && <div className="text-center py-4">Loading students...</div>}
+                        {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
                         {error && <div className="text-red-500 text-center py-4">{error}</div>}

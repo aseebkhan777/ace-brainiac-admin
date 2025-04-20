@@ -21,7 +21,7 @@ export default function AdminPortal() {
     if (result && result.statusCode === 200) {
       // Success already handled in hook with toast
       setTimeout(() => {
-        navigate("/students");
+        navigate("/dashboard", { replace: true });
       }, 2000);
     }
   };

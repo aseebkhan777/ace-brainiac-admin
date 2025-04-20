@@ -16,11 +16,12 @@ import {
     BarChart2,
     User,
 } from "lucide-react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
     const location = useLocation();
+    const navigate = useNavigate(); 
     const [expandedGroups, setExpandedGroups] = useState({
         analytics: false,
         settings: false,
@@ -98,8 +99,21 @@ const Sidebar = () => {
             label: "Logout",
             icon: "logout",
             path: "/logout",
+            action: handleLogout  // Add custom action for logout
         }
     ];
+
+    // Logout handler function
+    function handleLogout() {
+        // Clear authentication token from localStorage
+        localStorage.removeItem('adminAuthToken');
+        
+        // Optionally clear any other user data or session information
+        // localStorage.clear(); // Use this if you want to clear ALL localStorage items
+        
+        // Navigate to login page
+        navigate('/login');
+    }
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -163,7 +177,7 @@ const Sidebar = () => {
             return (
                 <button
                     key={link.id}
-                    onClick={() => window.location.href = link.path}
+                    onClick={() => link.action ? link.action() : navigate(link.path)}
                     className={`flex items-center w-full px-4 py-2 mb-1 rounded-md transition-colors ${
                         isActive
                             ? "bg-hover text-white"
@@ -226,7 +240,9 @@ const Sidebar = () => {
             </div>
 
             {/* Main Content */}
-            <Outlet />
+            <div className="flex-grow">
+                <Outlet />
+            </div>
         </div>
     );
 };

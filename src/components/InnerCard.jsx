@@ -2,6 +2,7 @@ import React from "react";
 import Input from "./Input";
 import { Search } from "lucide-react";
 import DateFilter from "./DateFilter";
+import ClassDropdown from "./ClassDropdown";
 
 export default function InnerCard({ 
   children,
@@ -20,8 +21,9 @@ export default function InnerCard({
     options: []
   },
   secondDropdownProps = null, // Optional second filter
-  dateFilterProps = null, // Make this optional too
-  showDivider = true
+  dateFilterProps = null, // Optional date filter
+  showDivider = true,
+  classDropdownProps = null // Optional class dropdown
 }) {
   return (
     <div className={`bg-white w-full p-6 md:p-8 rounded-lg shadow-sm ${className}`}>
@@ -33,7 +35,7 @@ export default function InnerCard({
             <Input
               placeholder={searchProps.placeholder}
               value={searchProps.value}
-              onChange={searchProps.onChange} // Use the provided onChange directly
+              onChange={searchProps.onChange}
               className="w-full pr-10"
             />
             {searchProps.showSearchIcon && (
@@ -41,26 +43,38 @@ export default function InnerCard({
             )}
           </div>
           
-          {/* First Dropdown (required) */}
-          <select
-            className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
-            value={firstDropdownProps.value}
-            onChange={firstDropdownProps.onChange} // Use the provided onChange directly
-          >
-            <option value="">{firstDropdownProps.label}</option>
-            {Array.isArray(firstDropdownProps.options) && firstDropdownProps.options.map((option, index) => (
-              <option key={index} value={option.value || option}>
-                {option.label || option}
-              </option>
-            ))}
-          </select>
+          {/* Class Dropdown (optional) - if provided, use instead of firstDropdownProps */}
+          {classDropdownProps ? (
+            <ClassDropdown
+              value={classDropdownProps.value}
+              onChange={classDropdownProps.onChange}
+              placeholder={classDropdownProps.placeholder || "Select class..."}
+              className="w-full md:w-auto bg-secondary`"
+              required={classDropdownProps.required}
+              error={classDropdownProps.error}
+            />
+          ) : (
+            /* First Dropdown (default if no classDropdownProps) */
+            <select
+              className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
+              value={firstDropdownProps.value}
+              onChange={firstDropdownProps.onChange}
+            >
+              <option value="">{firstDropdownProps.label}</option>
+              {Array.isArray(firstDropdownProps.options) && firstDropdownProps.options.map((option, index) => (
+                <option key={index} value={option.value || option}>
+                  {option.label || option}
+                </option>
+              ))}
+            </select>
+          )}
 
           {/* Second Dropdown (optional) */}
           {secondDropdownProps && (
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
               value={secondDropdownProps.value}
-              onChange={secondDropdownProps.onChange} // Use the provided onChange directly
+              onChange={secondDropdownProps.onChange}
             >
               <option value="">{secondDropdownProps.label}</option>
               {Array.isArray(secondDropdownProps.options) && secondDropdownProps.options.map((option, index) => (

@@ -13,20 +13,6 @@ const GENDER_OPTIONS = [
     { value: 'Other', label: 'Other' }
 ];
 
-const CLASS_OPTIONS = [
-    { value: '1st Grade', label: 'Grade 1' },
-    { value: '2nd Grade', label: 'Grade 2' },
-    { value: '3rd Grade', label: 'Grade 3' },
-    { value: '4th Grade', label: 'Grade 4' },
-    { value: '5th Grade', label: 'Grade 5' },
-    { value: '6th Grade', label: 'Grade 6' },
-    { value: '7th Grade', label: 'Grade 7' },
-    { value: '8th Grade', label: 'Grade 8' },
-    { value: '9th Grade', label: 'Grade 9' },
-    { value: '10th Grade', label: 'Grade 10' },
-    { value: '11th Grade', label: 'Grade 11' },
-    { value: '12th Grade', label: 'Grade 12' }
-];
 
 export default function CreateStudent() {
     // Use the custom hook for creating a student
@@ -61,10 +47,9 @@ export default function CreateStudent() {
         },
         {
             name: 'class',
-            type: 'dropdown',
+            type: 'classDropdown', 
             placeholder: 'Select Class',
             required: true,
-            options: CLASS_OPTIONS
         },
         {
             name: 'phone',

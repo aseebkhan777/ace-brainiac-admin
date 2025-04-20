@@ -7,6 +7,7 @@ import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchWorksheets from "../../hooks/useFetchWorksheets";
 import useDeleteWorksheet from "../../hooks/useDeleteWorksheet";
+import { LoadingSpinner } from "../../components/Loader";
 
 export default function WorksheetsPage() {
     const [page, setPage] = useState(1);
@@ -132,15 +133,19 @@ export default function WorksheetsPage() {
                             label: "Subject",
                             options: subjectOptions
                         }}
-                        secondDropdownProps={{
+                        classDropdownProps={{
                             value: selectedClass,
-                            onChange: (e) => setSelectedClass(e.target.value),
-                            label: "Class",
-                            options: classOptions
+                            onChange: (value) => {
+                                setSelectedClass(value);
+                                setPage(1); // Reset to first page when filtering
+                            },
+                            placeholder: "Filter by class...",
+                            className:"bg-secondary"
+                        
                         }}
                     >
                         {/* Loading State */}
-                        {loading && <div className="text-center py-4">Loading worksheets...</div>}
+                        {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
                         {error && <div className="text-red-500 text-center py-4">{error}</div>}

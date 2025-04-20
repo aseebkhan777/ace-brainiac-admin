@@ -3,8 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Dropdown } from "../../components/Dropdown";
 import Input from "../../components/Input";
 import useFetchStudent from "../../hooks/useFetchStudent";
+import ClassDropdown from "../../components/ClassDropdown";
+import { LoadingSpinner } from "../../components/Loader";
 
-const StudentDetails = () => {
+const StudentEdit = () => {
     const { id } = useParams(); // Get ID from URL params
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
@@ -18,20 +20,6 @@ const StudentDetails = () => {
         { value: "Other", label: "Other" }
     ];
 
-    const classOptions = [
-        { value: '1st Grade', label: 'Grade 1' },
-        { value: '2nd Grade', label: 'Grade 2' },
-        { value: '3rd Grade', label: 'Grade 3' },
-        { value: '4th Grade', label: 'Grade 4' },
-        { value: '5th Grade', label: 'Grade 5' },
-        { value: '6th Grade', label: 'Grade 6' },
-        { value: '7th Grade', label: 'Grade 7' },
-        { value: '8th Grade', label: 'Grade 8' },
-        { value: '9th Grade', label: 'Grade 9' },
-        { value: '10th Grade', label: 'Grade 10' },
-        { value: '11th Grade', label: 'Grade 11' },
-        { value: '12th Grade', label: 'Grade 12' }
-    ];
 
     const statusOptions = [
         { value: "Active", label: "Active" },
@@ -41,7 +29,7 @@ const StudentDetails = () => {
 
     // Store original student data when entering edit mode
     const handleStartEditing = () => {
-        setOriginalStudent({...student});
+        setOriginalStudent({ ...student });
         setIsEditing(true);
     };
 
@@ -140,7 +128,7 @@ const StudentDetails = () => {
 
                 {loading ? (
                     <div className="flex justify-center items-center h-64">
-                        <p>Loading student data...</p>
+                        <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>
                     </div>
                 ) : (
                     <div className="shadow-md rounded-xl mt-6 flex flex-col lg:flex-row items-center lg:items-stretch justify-center py-8 px-8 lg:px-14 bg-[#EEF4F2]">
@@ -239,11 +227,17 @@ const StudentDetails = () => {
                                 <div>
                                     <label className="block text-gray-600 text-sm font-semibold mb-1">Class</label>
                                     {isEditing ? (
-                                        <Dropdown
+                                        <ClassDropdown
                                             value={student.class}
-                                            onChange={handleDropdownChange("class")}
-                                            options={classOptions}
-                                            placeholder="Select Class"
+                                            onChange={(e) => {
+                                                console.log("ClassDropdown onChange event:", e);
+                                                setStudent({
+                                                    ...student,
+                                                    class: e.target?.value || e
+                                                });
+                                            }}
+                                            name="class"
+                                            required={true}
                                             className="w-full"
                                         />
                                     ) : (
@@ -325,4 +319,4 @@ const StudentDetails = () => {
     );
 };
 
-export default StudentDetails;
+export default StudentEdit;

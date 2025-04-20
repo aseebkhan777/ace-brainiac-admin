@@ -11,7 +11,11 @@ const useFetchSchool = (schoolId) => {
         principalPhone: "",
         principalEmail: "",
         enrollmentStrength: 0,
+        enrollmentStrengthType: "",
         status: "ACTIVE",
+        coordinatorName: "",
+        coordinatorEmail: "",
+        coordinatorPhone: "",
         createdAt: "",
         updatedAt: ""
     });
@@ -34,7 +38,7 @@ const useFetchSchool = (schoolId) => {
                 // Directly access the data property from the response
                 const apiData = response.data?.data || {};
                 
-                // Map API response to our expected structure
+                // Map API response to our expected structure, including coordinator info from user object
                 const schoolData = {
                     id: apiData.id || "",
                     schoolName: apiData.schoolName || "",
@@ -44,9 +48,16 @@ const useFetchSchool = (schoolId) => {
                     principalPhone: apiData.principalPhone || "",
                     principalEmail: apiData.principalEmail || "",
                     enrollmentStrength: apiData.enrollmentStrength || 0,
+                    enrollmentStrengthType: apiData.enrollmentStrengthType || "",
                     status: apiData.status || "ACTIVE",
+                    // Extract coordinator info from user object
+                    coordinatorName: apiData.user?.name || "",
+                    coordinatorEmail: apiData.user?.email || "",
+                    coordinatorPhone: apiData.user?.phone || "",
                     createdAt: apiData.createdAt || "",
-                    updatedAt: apiData.updatedAt || ""
+                    updatedAt: apiData.updatedAt || "",
+                    // Store the whole user object for reference if needed
+                    user: apiData.user || null
                 };
                 
                 console.log("Mapped school data:", schoolData);
@@ -70,12 +81,9 @@ const useFetchSchool = (schoolId) => {
             
             // Only send editable fields to the API
             const editableData = {
-                city: updatedData.city,
-                state: updatedData.state,
                 principalName: updatedData.principalName,
-                principalPhone: updatedData.principalPhone,
                 principalEmail: updatedData.principalEmail,
-                enrollmentStrength: parseInt(updatedData.enrollmentStrength, 10) || 0
+                enrollmentStrength: updatedData.enrollmentStrength.toString() // Convert to string as API expects
             };
             
             console.log("Sending update data:", editableData);
@@ -90,6 +98,10 @@ const useFetchSchool = (schoolId) => {
                 const updatedSchoolData = {
                     ...school, // Keep existing data
                     ...editableData, // Update with edited fields
+                    // Make sure we preserve coordinator info
+                    coordinatorName: apiData.user?.name || school.coordinatorName,
+                    coordinatorEmail: apiData.user?.email || school.coordinatorEmail,
+                    coordinatorPhone: apiData.user?.phone || school.coordinatorPhone,
                     updatedAt: apiData.updatedAt || new Date().toISOString() // Update the timestamp
                 };
                 
@@ -97,6 +109,7 @@ const useFetchSchool = (schoolId) => {
             } else {
                 // If no data returned, keep the updated data
                 setSchool({
+                    ...school,
                     ...updatedData,
                     updatedAt: new Date().toISOString()
                 });
