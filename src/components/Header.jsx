@@ -121,7 +121,7 @@ const Header = () => {
             className={`flex justify-end items-center fixed top-0 left-0 w-full z-50 transition-all duration-300 py-3 px-6 ${
                 !visible ? "transform -translate-y-full" : "transform-none"
             } ${
-                atTop ? "bg-transparent" : "bg-white shadow-md"
+                atTop ? "bg-transparent" : ""
             }`}
         >
             {/* Icon Container - Keeps all in one line */}
