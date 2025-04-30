@@ -6,12 +6,13 @@ const useCreateTest = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const createTest = async () => {
+  const createTest = async (formData) => {
     setLoading(true);
     setError(null);
     try {
       const api = apiWithAuth();
-      const response = await api.post("/admin/test", {}); 
+      // Send the form data in the request body
+      const response = await api.post("/admin/test", formData || {}); 
 
       if (response.data && response.data.data && response.data.data.id) {
         return response.data.data.id; // ✅ Return only the test ID

@@ -13,28 +13,30 @@ export default function SchoolsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedType, setSelectedType] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("");
-    const [selectedDate, setSelectedDate] = useState(""); // Add state for date if you need it
+    const [selectedDate, setSelectedDate] = useState("");
 
     const navigate = useNavigate();
 
     // Fetch schools using the custom hook
     const { schools = [], loading, error } = useFetchSchools();
 
-    // Prepare dropdown options
+    // Prepare dropdown options with all available statuses
     const statusOptions = [
-        { value: "ACTIVE", label: "Active" },
-        { value: "SUSPENDED", label: "Suspended" }
+        { value: "Active", label: "Active" },
+        { value: "Suspended", label: "Suspended" },
+        { value: "Blacklisted", label: "Blacklisted" },
+        { value: "Pending", label: "Pending" }
     ];
 
     // Filter schools based on search and dropdown filters
+    // Using user.status instead of school.status for filtering
     const filteredSchools = schools.filter(school =>
         (searchQuery === "" ||
             school.schoolName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             school.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             school.state?.toLowerCase().includes(searchQuery.toLowerCase())) &&
         (selectedType === "" || school.type === selectedType) &&
-        (selectedStatus === "" || school.status === selectedStatus)
-        // Add date filtering logic here if needed
+        (selectedStatus === "" || (school.user && school.user.status === selectedStatus))
     );
 
     // Pagination logic
@@ -51,6 +53,22 @@ export default function SchoolsPage() {
 
     const handleViewSchool = (schoolId) => {
         navigate(`/schools/${schoolId}`);
+    };
+
+    // Helper function to determine status color
+    const getStatusColorClasses = (status) => {
+        switch (status) {
+            case 'Active':
+                return 'bg-green-100 text-green-800';
+            case 'Suspended':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'Blacklisted':
+                return 'bg-red-100 text-red-800';
+            case 'Pending':
+                return 'bg-blue-100 text-blue-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
     };
 
     return (
@@ -75,7 +93,6 @@ export default function SchoolsPage() {
                             label: "Status",
                             options: statusOptions
                         }}
-                        // You can add dateFilterProps if needed
                         dateFilterProps={{
                             selectedDate: selectedDate,
                             onDateChange: (date) => setSelectedDate(date),
@@ -83,7 +100,7 @@ export default function SchoolsPage() {
                         }}
                     >
                         {/* Loading State */}
-                         {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
+                        {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
                         {error && <div className="text-red-500 text-center py-4">{error}</div>}
@@ -104,10 +121,8 @@ export default function SchoolsPage() {
                                     >
                                         <div className="flex justify-between items-center pb-2">
                                             <h3 className="text-sm font-semibold truncate">{school.schoolName}</h3>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${school.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                                                    'bg-yellow-100 text-yellow-800'
-                                                }`}>
-                                                {school.status}
+                                            <span className={`text-xs px-2 py-1 rounded-full ${getStatusColorClasses(school.user?.status || 'Unknown')}`}>
+                                                {school.user?.status || 'Unknown'}
                                             </span>
                                         </div>
 

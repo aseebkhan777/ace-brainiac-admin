@@ -28,7 +28,7 @@ export default function OuterCard({
           <div className="flex space-x-2">
             {buttonText && (
               <Button
-                variant="default"
+                variant="edit"
                 className={buttonClassName}
                 onClick={onButtonClick}
               >

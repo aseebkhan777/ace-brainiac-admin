@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { HiOutlineSupport } from "react-icons/hi";
 import {
     Menu,
     X,
@@ -15,8 +16,11 @@ import {
     Clipboard,
     BarChart2,
     User,
+    
+    
 } from "lucide-react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { logout } from "../../utils/logout";
 
 const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(true);
@@ -40,6 +44,7 @@ const Sidebar = () => {
         settings: Settings,
         account: User,
         logout: LogOut,
+        support: HiOutlineSupport,
     };
 
     const mainMenuLinks = [
@@ -95,6 +100,13 @@ const Sidebar = () => {
 
     const bottomMenuLinks = [
         {
+            id: "support",
+            label: "Support",
+            icon: "support",
+            path: "/support",
+
+        },
+        {
             id: "logout",
             label: "Logout",
             icon: "logout",
@@ -106,13 +118,7 @@ const Sidebar = () => {
     // Logout handler function
     function handleLogout() {
         // Clear authentication token from localStorage
-        localStorage.removeItem('adminAuthToken');
-        
-        // Optionally clear any other user data or session information
-        // localStorage.clear(); // Use this if you want to clear ALL localStorage items
-        
-        // Navigate to login page
-        navigate('/login');
+        logout(navigate);
     }
 
     const toggleSidebar = () => {

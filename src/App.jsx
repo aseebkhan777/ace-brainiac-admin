@@ -23,6 +23,9 @@ import SchoolDetails from './pages/schools/details'
 import StudentEdit from './pages/student/edit'
 import StudentDetails from './pages/student/details'
 import Dashboard from './pages/dashboard'
+import AdminSupportTicketsPage from './pages/support'
+import AdminPerformance from './pages/performance'
+import AdminStudentPerformance from './pages/performance/student'
 
 // Protected Route component that checks for authentication
 const ProtectedRoute = ({ children }) => {
@@ -85,6 +88,20 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        } />
+        <Route path='/performance' element={
+          <ProtectedRoute>
+            <Layout>
+              <AdminPerformance />
+            </Layout>
+          </ProtectedRoute>
+        } />
+         <Route path='/performance/:id' element={
+          <ProtectedRoute>
+            <Layout>
+              <AdminStudentPerformance />
             </Layout>
           </ProtectedRoute>
         } />
@@ -204,6 +221,13 @@ function App() {
           <ProtectedRoute>
             <Layout>
               <CreateMembership />
+            </Layout>
+          </ProtectedRoute>
+        } />
+          <Route path='/support' element={
+          <ProtectedRoute>
+            <Layout>
+              <AdminSupportTicketsPage />
             </Layout>
           </ProtectedRoute>
         } />

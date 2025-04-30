@@ -244,7 +244,7 @@ const DynamicForm = ({
                 {onCancel && (
                     <Button
                         onClick={onCancel}
-                        className="text-gray-600 border border-gray-300 px-6 py-2 rounded-lg"
+                        className="text-white mt-2 border border-gray-300 px-6 py-2 rounded-lg"
                         disabled={loading}
                     >
                         {cancelButtonText}

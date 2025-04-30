@@ -9,18 +9,18 @@ import useUpdateTest from "../../hooks/useUpdateTests"
 import useAddQuestion from "../../hooks/useAddQuestion"
 import useGetTest from "../../hooks/useGetTest"
 import useCreateTest from "../../hooks/useCreateTests"
-import useDeleteQuestion from "../../hooks/useDeleteQuestion" // Import the new hook
+import useDeleteQuestion from "../../hooks/useDeleteQuestion"
 import ClassDropdown from "../../components/ClassDropdown"
 import { LoadingSpinner } from "../../components/Loader"
 
 export default function CreateTests() {
     const navigate = useNavigate();
-    const { id: testId } = useParams() // Get testId from URL parameters
+    const { id: testId } = useParams()
     const isEditMode = !!testId;
     const [activeTab, setActiveTab] = useState("questions")
     const [questions, setQuestions] = useState([
         {
-            id: Date.now(), // Use unique ID for new questions
+            id: Date.now(),
             question: "",
             options: [
                 { text: "", correct: false },
@@ -28,9 +28,9 @@ export default function CreateTests() {
                 { text: "", correct: false },
                 { text: "", correct: false },
             ],
-            attachments: [],
+            attachment: null, // Changed from attachments array to single attachment
             uploading: false,
-            isExisting: false, // Track if this is an existing question from the database
+            isExisting: false,
         },
     ])
 
@@ -39,66 +39,56 @@ export default function CreateTests() {
         subject: "",
         class: "",
         totalMarks: "",
-        status: "DRAFT", // default status
-        certification_available: false, // default value
+        status: "DRAFT",
+        certification_available: false,
     })
 
-    // Track removed questions for bulk operations (only needed for new questions now)
     const [removedQuestions, setRemovedQuestions] = useState([])
-
     const [submitting, setSubmitting] = useState(false)
     const [notification, setNotification] = useState({ show: false, message: "", type: "" })
 
-    // Import our custom hooks
     const { test, loading: fetchingTest, error: fetchTestError } = useGetTest(testId)
     const { createTest, loading: creatingTest } = useCreateTest()
     const { addBulkQuestions, loading: addingQuestions, error: addQuestionsError } = useAddQuestion()
     const { updateTest, loading: updatingTest, error: updateTestError } = useUpdateTest(testId)
-    const { deleteQuestion, loading: deletingQuestion, error: deleteQuestionError } = useDeleteQuestion() // Add the new hook
+    const { deleteQuestion, loading: deletingQuestion, error: deleteQuestionError } = useDeleteQuestion()
 
-    // Dropdown options for subjects
     const subjectOptions = [
         { value: "Math", label: "Math" },
         { value: "Science", label: "Science" },
         { value: "History", label: "History" }
     ]
 
-    // Dropdown options for classes
     const classOptions = [
         { value: "Grade 1", label: "Grade 1" },
         { value: "Grade 2", label: "Grade 2" },
         { value: "Grade 3", label: "Grade 3" }
     ]
 
-    // Dropdown options for status
     const statusOptions = [
         { value: "DRAFT", label: "Draft" },
         { value: "PUBLISHED", label: "Published" }
     ]
 
-    // Show notification function
     const showNotification = (message, type) => {
         setNotification({ show: true, message, type })
         setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000)
     }
 
-    // Initialize page with test data when in edit mode
     useEffect(() => {
         if (test) {
-            // Populate settings - Fixed certificationAvailable property mapping
             setSettings({
                 title: test.title || "",
                 subject: test.subject || "",
                 class: test.class || "",
                 totalMarks: test.totalMarks?.toString() || "",
                 status: test.status || "DRAFT",
-                certification_available: test.certificationAvailable || false, // Fixed property name to match API response
+                certification_available: test.certificationAvailable || false,
             })
 
-            // Populate questions if they exist
             if (test.questions && test.questions.length > 0) {
                 const formattedQuestions = test.questions.map(q => ({
-                    id: q.id, // Use the actual ID from the database
+                    id: q.id,
                     question: q.question || "",
                     options: q.options?.map(opt => ({
                         text: opt.option || "",
@@ -109,23 +99,22 @@ export default function CreateTests() {
                             { text: "", correct: false },
                             { text: "", correct: false },
                         ],
-                    attachments: q.imageUrl ? [{ id: Date.now(), name: q.imageUrl, file: null }] : [],
+                    // Changed to store single attachment object instead of array
+                    attachment: q.imageUrl ? { id: Date.now(), name: q.imageUrl, file: null } : null,
                     uploading: false,
-                    isExisting: true, // Mark as existing question
+                    isExisting: true,
                 }));
                 setQuestions(formattedQuestions);
             }
         }
     }, [test]);
 
-    // Handle error from fetching test
     useEffect(() => {
         if (fetchTestError) {
             showNotification(`Failed to load test: ${fetchTestError}`, "error");
         }
     }, [fetchTestError]);
 
-    // Monitor delete question error
     useEffect(() => {
         if (deleteQuestionError) {
             showNotification(`Failed to delete question: ${deleteQuestionError}`, "error");
@@ -142,7 +131,7 @@ export default function CreateTests() {
         setQuestions((prev) => [
             ...prev,
             {
-                id: Date.now(), // Use timestamp as temporary ID
+                id: Date.now(),
                 question: "",
                 options: [
                     { text: "", correct: false },
@@ -150,34 +139,31 @@ export default function CreateTests() {
                     { text: "", correct: false },
                     { text: "", correct: false },
                 ],
-                attachments: [],
+                attachment: null, // Changed from attachments array to single attachment
                 uploading: false,
-                isExisting: false, // Mark as new question
+                isExisting: false,
             },
         ])
     }
 
-    // Modified removeQuestion function to handle both new and existing questions
     const removeQuestion = async (id, isExisting) => {
         if (isExisting && testId) {
-            // For existing questions, send DELETE request to API
             setSubmitting(true)
             const success = await deleteQuestion(testId, id)
             setSubmitting(false)
 
             if (success) {
                 showNotification("Question deleted successfully", "success")
-                // Remove from UI after successful deletion
                 setQuestions(prev => prev.filter(q => q.id !== id))
             } else {
                 showNotification(deleteQuestionError || "Failed to delete question", "error")
             }
         } else {
-            // For new questions, just remove from UI
             setQuestions(prev => prev.filter(q => q.id !== id))
         }
     }
 
+    // Modified to replace any existing attachment instead of adding to array
     const handleFileUpload = (qIndex, e) => {
         const file = e.target.files[0]
         if (!file) return
@@ -193,7 +179,8 @@ export default function CreateTests() {
                     index === qIndex
                         ? {
                             ...q,
-                            attachments: [...q.attachments, { id: Date.now(), file, name: file.name }],
+                            // Replace the attachment instead of adding to array
+                            attachment: { id: Date.now(), file, name: file.name },
                             uploading: false,
                         }
                         : q,
@@ -204,31 +191,28 @@ export default function CreateTests() {
         }, 1500)
     }
 
-    const removeAttachment = (qIndex, attachmentId) => {
+    // Modified to handle single attachment
+    const removeAttachment = (qIndex) => {
         setQuestions((prev) =>
             prev.map((q, index) =>
                 index === qIndex
-                    ? { ...q, attachments: q.attachments.filter((attachment) => attachment.id !== attachmentId) }
+                    ? { ...q, attachment: null }
                     : q,
             ),
         )
     }
 
-    // Helper function to validate a question
     const validateQuestion = (q) => {
-        // Check if question text is provided
         if (!q.question.trim()) {
             showNotification("Question text cannot be empty", "error")
             return false
         }
 
-        // Check if options array has at least 4 items
         if (q.options.length < 4) {
             showNotification("At least 4 options are required for each question", "error")
             return false
         }
 
-        // Check if all options have text
         const emptyOptionIndex = q.options.findIndex(
             option => option.text === undefined || option.text === null || option.text.trim() === ""
         )
@@ -238,7 +222,6 @@ export default function CreateTests() {
             return false
         }
 
-        // Check if at least one option is marked as correct
         const hasCorrectOption = q.options.some(option => option.correct)
         if (!hasCorrectOption) {
             showNotification(`Question "${q.question.substring(0, 20)}...": At least one option must be correct`, "error")
@@ -248,13 +231,12 @@ export default function CreateTests() {
         return true
     }
 
-    // Format question for the bulk API
+    // Updated to handle single attachment
     const formatQuestionForBulkApi = (q) => {
-        // Include question ID for existing questions to trigger update
         return {
-            ...(q.isExisting ? { id: q.id } : {}), // Only include ID if it's an existing question
+            ...(q.isExisting ? { id: q.id } : {}),
             text: q.question,
-            file: q.attachments.length > 0 ? q.attachments[0].file : null,
+            file: q.attachment?.file || null,
             options: q.options.map(option => ({
                 text: option.text,
                 is_correct: option.correct
@@ -262,9 +244,7 @@ export default function CreateTests() {
         }
     }
 
-    // Simplified function to submit all questions via bulk API
     const handleSubmitAllQuestions = async () => {
-        // Validate all questions before submitting
         const validQuestions = questions.filter(q => validateQuestion(q))
 
         if (validQuestions.length === 0) {
@@ -277,7 +257,6 @@ export default function CreateTests() {
         let currentTestId = testId
         let success = true
 
-        // If we're not in edit mode, create a new test first
         if (!isEditMode) {
             currentTestId = await createTest()
             if (!currentTestId) {
@@ -287,15 +266,12 @@ export default function CreateTests() {
             }
         }
 
-        // Format all questions for the bulk API
         const formattedQuestions = validQuestions.map(formatQuestionForBulkApi)
 
-        // We no longer need to include removed_questions since we're handling deletion individually
         const jsonData = {
             questions: formattedQuestions
         }
 
-        // Use the bulk API to handle both new and existing questions
         success = await addBulkQuestions(currentTestId, jsonData)
 
         if (success) {
@@ -304,7 +280,6 @@ export default function CreateTests() {
             if (!isEditMode) {
                 navigate(`/create-test/${currentTestId}`)
 
-                // Reset the questions form
                 setQuestions([
                     {
                         id: Date.now(),
@@ -315,13 +290,12 @@ export default function CreateTests() {
                             { text: "", correct: false },
                             { text: "", correct: false },
                         ],
-                        attachments: [],
+                        attachment: null, // Changed from attachments array
                         uploading: false,
                         isExisting: false,
                     }
                 ])
             } else {
-                // Update the state to reflect all questions as existing
                 setQuestions(prev => prev.map(q => ({ ...q, isExisting: true })))
             }
         } else {
@@ -332,20 +306,17 @@ export default function CreateTests() {
         return success
     }
 
-    // Function to handle saving settings - Updated to map property correctly for API
     const handleSaveSettings = async () => {
         if (!settings.title.trim()) {
             showNotification("Title is required", "error")
             return false
         }
 
-        // Added: Validate subject is selected
         if (!settings.subject) {
             showNotification("Subject is required", "error")
             return false
         }
 
-        // Added: Validate class is selected
         if (!settings.class) {
             showNotification("Class is required", "error")
             return false
@@ -355,7 +326,6 @@ export default function CreateTests() {
 
         let currentTestId = testId
 
-        // If we're not in edit mode, create a new test first
         if (!isEditMode) {
             currentTestId = await createTest()
             if (!currentTestId) {
@@ -365,25 +335,20 @@ export default function CreateTests() {
             }
         }
 
-        // Format settings data as required by the API
-        // Format settings data as required by the API
         const settingsData = {
             title: settings.title,
             subject: settings.subject,
             class: settings.class,
             totalMarks: Number.parseInt(settings.totalMarks) || 0,
             status: settings.status,
-            // Be explicit with the boolean conversion
             certificationAvailable: settings.certification_available === true
         }
 
-        // Use the existing updateTest function from the hook already initialized at the top level
         const success = await updateTest(settingsData)
 
         if (success) {
             showNotification("Settings saved successfully", "success")
 
-            // If we created a new test, redirect to edit mode
             if (!isEditMode) {
                 navigate(`/create-test/${currentTestId}`)
             }
@@ -395,7 +360,6 @@ export default function CreateTests() {
         return success
     }
 
-    // Function to handle saving the entire test
     const handleSaveTest = async () => {
         if (activeTab === "questions") {
             return await handleSubmitAllQuestions()
@@ -404,21 +368,17 @@ export default function CreateTests() {
         }
     }
 
-    // Show loading state while fetching test data in edit mode
     if (isEditMode && fetchingTest) {
         return (
             <div className="flex min-h-screen bg-white justify-center items-center">
                 <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>
-                
             </div>
         )
     }
 
     return (
         <div className="flex min-h-screen bg-white">
-            {/* Main Content */}
             <div className="flex-1 flex flex-col pt-14 items-center p-4 md:pt-20 md:px-9 bg-white min-h-screen">
-                {/* Notification */}
                 {notification.show && (
                     <div
                         className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${notification.type === "success"
@@ -461,7 +421,6 @@ export default function CreateTests() {
                     </div>
 
                     <div className="p-4 bg-white rounded-lg">
-                        {/* Tabs */}
                         <Tabs>
                             <div className="sticky top-0 z-10 bg-white ">
                                 <TabsList className="flex gap-4 border-b pb-2">
@@ -498,7 +457,6 @@ export default function CreateTests() {
                                                 </button>
                                             )}
 
-                                            {/* Badge to indicate if this is an existing question */}
                                             {q.isExisting && (
                                                 <span className="absolute top-2 left-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                                                     Existing
@@ -541,7 +499,9 @@ export default function CreateTests() {
                                                     ) : (
                                                         <>
                                                             <Upload className="mr-2" size={18} />
-                                                            <span>Upload Question Attachment</span>
+                                                            <span>
+                                                                {q.attachment ? "Replace Attachment" : "Upload Question Attachment"}
+                                                            </span>
                                                         </>
                                                     )}
                                                 </label>
@@ -552,25 +512,22 @@ export default function CreateTests() {
                                                 )}
                                             </div>
 
-                                            {/* Display Attachments */}
-                                            {q.attachments.length > 0 && (
+                                            {/* Display single attachment */}
+                                            {q.attachment && (
                                                 <div className="mt-3">
-                                                    <p className="text-sm font-medium mb-2">Attachments:</p>
+                                                    <p className="text-sm font-medium mb-2">Attachment:</p>
                                                     <div className="flex flex-wrap gap-2">
-                                                        {q.attachments.map((attachment) => (
-                                                            <div
-                                                                key={attachment.id}
-                                                                className="flex items-center bg-gray-50 px-3 py-1 rounded-full text-sm border"
+                                                        <div
+                                                            className="flex items-center bg-gray-50 px-3 py-1 rounded-full text-sm border"
+                                                        >
+                                                            <span className="truncate max-w-[150px]">{q.attachment.name}</span>
+                                                            <button
+                                                                onClick={() => removeAttachment(qIndex)}
+                                                                className="ml-2 text-red-500 hover:text-red-700"
                                                             >
-                                                                <span className="truncate max-w-[150px]">{attachment.name}</span>
-                                                                <button
-                                                                    onClick={() => removeAttachment(qIndex, attachment.id)}
-                                                                    className="ml-2 text-red-500 hover:text-red-700"
-                                                                >
-                                                                    <X size={14} />
-                                                                </button>
-                                                            </div>
-                                                        ))}
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )}
@@ -583,7 +540,6 @@ export default function CreateTests() {
                                                             value={option.text || ""}
                                                             className="flex-1 bg-white"
                                                             onChange={(e) => {
-                                                                // Direct state update with explicit new array creation
                                                                 const newQuestions = [...questions]
                                                                 newQuestions[qIndex].options[oIndex].text = e.target.value
                                                                 setQuestions(newQuestions)
@@ -619,7 +575,6 @@ export default function CreateTests() {
                                         </div>
                                     ))}
 
-                                    {/* Add new question button */}
                                     <div className="flex justify-start mt-4">
                                         <Button onClick={addNewQuestion} variant="outline" className="text-black px-4 py-2 text-sm rounded">
                                             + Add new question
@@ -637,7 +592,6 @@ export default function CreateTests() {
                                         onChange={(e) => setSettings({ ...settings, title: e.target.value })}
                                     />
 
-                                    {/* Subject Dropdown */}
                                     <div className="mb-3">
                                         <Dropdown
                                             placeholder="Select Subject *"
@@ -648,25 +602,17 @@ export default function CreateTests() {
                                         />
                                     </div>
 
-                                    {/* Class Dropdown */}
                                     <div className="mb-3">
                                         <ClassDropdown
                                             value={settings.class}
                                             onChange={(value) => {
-                                                // Handle both event objects and direct values
                                                 if (value && value.target) {
-                                                    // It's an event object
                                                     setSettings({ ...settings, class: value.target.value });
                                                 } else if (value === null || value === undefined) {
-                                                    // It's a null/undefined value, set empty string to avoid "undefined" in dropdown
                                                     setSettings({ ...settings, class: "" });
                                                 } else {
-                                                    // It's a direct value (string)
                                                     setSettings({ ...settings, class: value });
                                                 }
-
-                                                // Log the value for debugging
-                                                // console.log("New class value:", value && value.target ? value.target.value : value);
                                             }}
                                             name="class"
                                             required={true}
@@ -682,7 +628,6 @@ export default function CreateTests() {
                                         onChange={(e) => setSettings({ ...settings, totalMarks: e.target.value })}
                                     />
 
-                                    {/* Status Dropdown */}
                                     <div className="mb-3">
                                         <Dropdown
                                             placeholder="Select Status"

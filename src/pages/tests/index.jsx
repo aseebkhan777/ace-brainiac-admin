@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, FileText, Calendar, User, CheckCircle, Loader, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, CheckCircle, Loader, Trash2, Eye } from "lucide-react";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
+
 import useFetchTests from "../../hooks/useFetchTests";
 import useCreateTest from "../../hooks/useCreateTests";
 import useDeleteTest from "../../hooks/useDeteleTests";
 import { LoadingSpinner } from "../../components/Loader";
+import CreateTestModal from "../../components/TestModal";
 
 export default function TestsPage() {
     const [page, setPage] = useState(1);
@@ -16,6 +18,8 @@ export default function TestsPage() {
     const [selectedStatus, setSelectedStatus] = useState("");
     const [selectedCertification, setSelectedCertification] = useState("");
     const [dateFilter, setDateFilter] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formError, setFormError] = useState(null);
 
     const navigate = useNavigate();
 
@@ -68,18 +72,31 @@ export default function TestsPage() {
         page * itemsPerPage
     );
 
-    // Handle test creation
-    const handleAddTest = async () => {
-        try {
-            const testId = await createTest();
+    // Modal handling
+    const handleCreateTestClick = () => {
+        setFormError(null);
+        setIsModalOpen(true);
+    };
 
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setFormError(null);
+    };
+
+    const handleCreateTest = async (formData) => {
+        try {
+            console.log("Creating test with data:", formData);
+            const testId = await createTest(formData);
+            
             if (testId) {
+                setIsModalOpen(false);
                 navigate(`/tests/create/${testId}`);
             } else {
-                console.error("No test ID returned from createTest");
+                setFormError("Failed to create test. Please try again.");
             }
         } catch (err) {
             console.error("Error creating test:", err);
+            setFormError(err.message || "An error occurred while creating the test.");
         }
     };
 
@@ -89,7 +106,7 @@ export default function TestsPage() {
 
     // Handle test deletion
     const handleDeleteTest = async (testId, e) => {
-        e.stopPropagation(); // Prevent triggering other click events
+        if (e) e.stopPropagation(); // Prevent triggering other click events
 
         if (window.confirm("Are you sure you want to delete this test? This action cannot be undone.")) {
             try {
@@ -110,17 +127,8 @@ export default function TestsPage() {
             <div className="flex-1 flex flex-col bg-white">
                 <OuterCard
                     title="Tests"
-                    buttonText={
-                        creatingTest ? (
-                            <span className="flex items-center gap-2">
-                                <Loader size={16} className="animate-spin" />
-                                Creating...
-                            </span>
-                        ) : (
-                            "+ Add Test"
-                        )
-                    }
-                    onButtonClick={handleAddTest}
+                    buttonText="+ Add Test"
+                    onButtonClick={handleCreateTestClick}
                     buttonDisabled={creatingTest}
                     buttonLoading={creatingTest ? "Creating..." : null}
                 >
@@ -218,10 +226,10 @@ export default function TestsPage() {
                                         <div className="flex justify-between gap-2 mt-3">
                                             <Button
                                                 variant="secondary"
-                                                className="mt-3 w-3/4 text-xs"
+                                                className="mt-3 w-3/4 text-xs flex items-center justify-center gap-1"
                                                 onClick={() => handleViewTest(test.id)}
                                             >
-                                                View Details
+                                                <Eye size={14} /> View Details
                                             </Button>
                                             <Button
                                                 variant="delete"
@@ -260,6 +268,15 @@ export default function TestsPage() {
                     </InnerCard>
                 </OuterCard>
             </div>
+
+            {/* Test Creation Modal */}
+            <CreateTestModal 
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onSubmit={handleCreateTest}
+                loading={creatingTest}
+                error={formError}
+            />
         </div>
     );
 }

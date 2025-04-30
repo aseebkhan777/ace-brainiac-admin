@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 
 const useFetchSchoolDetails = () => {
     const { id } = useParams();
-    const navigate = useNavigate(); // Add this line to use the navigate function
+    const navigate = useNavigate();
     const [schoolDetails, setSchoolDetails] = useState({
         schoolName: "Unknown",
         location: "Unknown",
@@ -157,6 +157,26 @@ const useFetchSchoolDetails = () => {
         }
     };
 
+    const handleApprove = async () => {
+        try {
+            const api = apiWithAuth();
+            await api.patch(`/admin/schools/approve/${id}`);
+            
+            // Update local state
+            setSchoolDetails(prevDetails => ({
+                ...prevDetails,
+                status: "ACTIVE"
+            }));
+            
+            // Show success toast
+            toast.success("School approved successfully");
+        } catch (err) {
+            console.error("Error approving school:", err);
+            // Show error toast
+            toast.error(err.response?.data?.message || "Failed to approve school");
+        }
+    };
+
     const handleBlacklist = async () => {
         try {
             const api = apiWithAuth();
@@ -191,6 +211,7 @@ const useFetchSchoolDetails = () => {
         error,
         handleSuspend,
         handleActivate,
+        handleApprove,
         handleBlacklist,
         handleEdit
     };

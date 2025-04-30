@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,7 +8,20 @@ export default function AdminPortal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { loginAdmin, loading, error } = useAdminLogin();
+  const { loginAdmin, loading, error, prepareFCM } = useAdminLogin();
+
+  // Initialize FCM only once when the component mounts
+  useEffect(() => {
+    // By using a local flag to track initialization, we ensure it only happens once
+    let hasInitialized = false;
+    
+    if (!hasInitialized) {
+      prepareFCM();
+      hasInitialized = true;
+    }
+    
+    // Empty dependency array ensures this effect runs only once
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,10 +32,7 @@ export default function AdminPortal() {
     console.log("Attempting admin login with:", { email, password });
     const result = await loginAdmin(email, password);
     if (result && result.statusCode === 200) {
-      // Success already handled in hook with toast
-      setTimeout(() => {
-        navigate("/dashboard", { replace: true });
-      }, 2000);
+      // Success already handled in hook with toast and navigation
     }
   };
   

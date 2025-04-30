@@ -17,6 +17,7 @@ export default function SchoolDetails() {
         error,
         handleSuspend,
         handleActivate,
+        handleApprove,
         handleBlacklist,
         handleEdit
     } = useFetchSchoolDetails();
@@ -64,20 +65,36 @@ export default function SchoolDetails() {
     };
 
     // Determine button configuration based on status
-    // In the getButtonConfig function, update the condition to check for uppercase statuses:
     const getButtonConfig = () => {
         const status = schoolDetails.status || "ACTIVE";
 
-        if (status === "SUSPENDED" || status === "BLACKLISTED") {
+        // Handle PENDING status - only show Approve button
+        if (status === "Pending") {
+            return {
+                mainButton: {
+                    text: "Approve",
+                    variant: "edit",
+                    className: "bg-green-300 text-green-600 hover:bg-green-500 hover:text-white",
+                    onClick: handleApprove
+                },
+                secondaryButton: null,
+                tertiaryButton: null
+            };
+        }
+
+        // Handle SUSPENDED or BLACKLISTED status
+        if (status === "Suspended" || status === "Blacklisted") {
             return {
                 mainButton: {
                     text: "Activate",
+                    variant: "edit",
                     className: "bg-green-300 text-green-600 hover:bg-green-500 hover:text-white",
                     onClick: handleActivate
                 },
                 secondaryButton: null, // No secondary button for suspended/blacklisted schools
                 tertiaryButton: {
                     text: "Edit",
+                    variant: "edit",
                     className: "bg-[#c8f3ff] text-black border border-[#64cffe] hover:bg-blue-500 hover:text-white",
                     onClick: handleEdit
                 }
@@ -88,7 +105,7 @@ export default function SchoolDetails() {
         return {
             mainButton: {
                 text: "Suspend",
-                className: "bg-red-200 text-red-500 hover:bg-red-500 hover:text-white",
+                className: "bg-red-200 text-red-500 border border-red-500 hover:bg-red-500 hover:text-white",
                 onClick: handleSuspend
             },
             secondaryButton: {
@@ -117,9 +134,9 @@ export default function SchoolDetails() {
                 secondaryButtonText={buttonConfig.secondaryButton?.text}
                 secondaryButtonClassName={buttonConfig.secondaryButton?.className}
                 onSecondaryButtonClick={buttonConfig.secondaryButton?.onClick}
-                tertiaryButtonText={buttonConfig.tertiaryButton.text}
-                tertiaryButtonClassName={buttonConfig.tertiaryButton.className}
-                onTertiaryButtonClick={buttonConfig.tertiaryButton.onClick}
+                tertiaryButtonText={buttonConfig.tertiaryButton?.text}
+                tertiaryButtonClassName={buttonConfig.tertiaryButton?.className}
+                onTertiaryButtonClick={buttonConfig.tertiaryButton?.onClick}
             >
                 <div className="bg-white rounded-lg p-6 w-full">
                     <Details
