@@ -1,6 +1,6 @@
 import React from "react";
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";;
+import "react-toastify/dist/ReactToastify.css";
 import OuterCard from "../../components/OuterCard";
 
 import useCreateWorksheet from "../../hooks/useCreateWorksheet";
@@ -14,7 +14,6 @@ const SUBJECT_OPTIONS = [
     { value: 'History', label: 'History' },
     { value: 'Art', label: 'Art' }
 ];
-
 
 export default function CreateWorksheet() {
     // Use the custom hook
@@ -66,8 +65,14 @@ export default function CreateWorksheet() {
         const result = await createWorksheet(formData);
         
         if (result.success) {
-            // Show success toast notification
-            toast.success("Worksheet created successfully!");
+            // Show success toast notification and navigate after a slight delay
+            toast.success("Worksheet created successfully!", {
+                onClose: () => {
+                    // Navigate after toast closes or after minimum display time
+                    result.navigateTo();
+                },
+                autoClose: 2000 // Ensure toast shows for at least 2 seconds
+            });
         } else if (result.error) {
             // Show error toast
             toast.error(result.error);

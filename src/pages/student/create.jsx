@@ -5,14 +5,12 @@ import OuterCard from "../../components/OuterCard";
 import DynamicForm from "../../components/DynamicForm";
 import useCreateStudent from "../../hooks/useCreateStudents";
 
-
 // Predefined options for gender and class dropdowns
 const GENDER_OPTIONS = [
     { value: 'Male', label: 'Male' },
     { value: 'Female', label: 'Female' },
     { value: 'Other', label: 'Other' }
 ];
-
 
 export default function CreateStudent() {
     // Use the custom hook for creating a student
@@ -85,8 +83,14 @@ export default function CreateStudent() {
         const result = await createStudent(formData);
         
         if (result.success) {
-            // Show success toast notification
-            toast.success("Student created successfully!");
+            // Show success toast notification and navigate after toast closes
+            toast.success("Student created successfully!", {
+                onClose: () => {
+                    // Navigate after toast closes
+                    result.navigateTo();
+                },
+                autoClose: 2000 // Ensure toast shows for at least 2 seconds
+            });
         } else if (result.error) {
             // Show error toast
             toast.error(result.error);

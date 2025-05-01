@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiWithAuth } from "../axios/Instance";
 
 const useCreateSchool = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const createSchool = async (schoolData) => {
     setLoading(true);
@@ -34,7 +36,13 @@ const useCreateSchool = () => {
       const response = await api.post("/admin/schools", payload);
 
       console.log("School created successfully:", response.data);
-      return { success: true, data: response.data };
+      
+      // Return success with navigation function
+      return { 
+        success: true, 
+        data: response.data,
+        navigateTo: () => navigate("/schools") // Return navigation function to be called after toast
+      };
 
     } catch (err) {
       console.error("Create school error:", err);

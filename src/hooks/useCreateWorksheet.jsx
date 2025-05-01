@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiWithAuth } from "../axios/Instance";
 
 
 const useCreateWorksheet = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const createWorksheet = async (worksheetData) => {
     setLoading(true);
@@ -53,7 +55,13 @@ const useCreateWorksheet = () => {
       });
 
       console.log("Worksheet created successfully:", response.data);
-      return { success: true, data: response.data };
+      
+      // Return success without navigating - we'll handle navigation in the component
+      return { 
+        success: true, 
+        data: response.data,
+        navigateTo: () => navigate("/worksheets") // Return navigation function to be called after toast
+      };
 
     } catch (err) {
       console.error("Create worksheet error:", err);

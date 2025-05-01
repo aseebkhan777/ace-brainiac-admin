@@ -51,8 +51,14 @@ export default function CreateMembership() {
         const result = await createMembership(formData);
         
         if (result.success) {
-            // Show success toast notification
-            toast.success("Membership created successfully!");
+            // Show success toast notification and navigate after toast closes
+            toast.success("Membership created successfully!", {
+                onClose: () => {
+                    // Navigate after toast closes
+                    result.navigateTo();
+                },
+                autoClose: 2000 // Ensure toast shows for at least 2 seconds
+            });
         } else if (result.error) {
             // Show error toast
             toast.error(result.error);

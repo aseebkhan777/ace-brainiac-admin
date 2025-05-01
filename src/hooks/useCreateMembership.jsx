@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiWithAuth } from "../axios/Instance";
 
 const useCreateMembership = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const createMembership = async (membershipData) => {
     setLoading(true);
@@ -36,7 +38,13 @@ const useCreateMembership = () => {
       const response = await api.post("/admin/membership", payload);
 
       console.log("Membership created successfully:", response.data);
-      return { success: true, data: response.data };
+      
+      // Return success with navigation function
+      return { 
+        success: true, 
+        data: response.data,
+        navigateTo: () => navigate("/memberships") // Return navigation function to be called after toast
+      };
 
     } catch (err) {
       console.error("Create membership error:", err);
