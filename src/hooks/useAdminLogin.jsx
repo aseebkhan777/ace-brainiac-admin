@@ -83,7 +83,7 @@ const useAdminLogin = () => {
                 
                 // Navigate to admin dashboard after successful login
                 setTimeout(() => {
-                    navigate("/admin/dashboard");
+                    navigate("/dashboard");
                 }, 2000);
                 
                 // If FCM failed, try again in the background

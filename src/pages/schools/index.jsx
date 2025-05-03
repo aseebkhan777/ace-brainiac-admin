@@ -18,7 +18,7 @@ export default function SchoolsPage() {
     const navigate = useNavigate();
 
     // Fetch schools using the custom hook
-    const { schools = [], loading, error } = useFetchSchools();
+    const { schools = [], loading, error, handleChangeParams, params } = useFetchSchools();
 
     // Prepare dropdown options with all available statuses
     const statusOptions = [
@@ -162,8 +162,8 @@ export default function SchoolsPage() {
                         <div className="flex justify-center items-center gap-3 mt-5">
                             <Button
                                 variant="outline"
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
+                                onClick={() => handleChangeParams({param: 'limit', newValue: params.limit - 1})}
+                                disabled={params.limit === 1}
                                 className="px-2 py-1"
                             >
                                 <ChevronLeft size={16} />
@@ -171,8 +171,8 @@ export default function SchoolsPage() {
                             <span className="text-sm">{page} of {totalPages || 1}</span>
                             <Button
                                 variant="outline"
-                                onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages || totalPages === 0}
+                                onClick={() => handleChangeParams({param: 'limit', newValue: params.limit + 1})}
+                                disabled={params.offset > 100}
                                 className="px-2 py-1"
                             >
                                 <ChevronRight size={16} />
