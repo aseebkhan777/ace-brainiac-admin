@@ -1,0 +1,50 @@
+[
+    {
+      "id": "Math",
+      "name": "Mathematics"
+    },
+    {
+      "id": "Science",
+      "name": "Science"
+    },
+    {
+      "id": "English",
+      "name": "English"
+    },
+    {
+      "id": "History",
+      "name": "History"
+    },
+    {
+      "id": "Geography",
+      "name": "Geography"
+    },
+    {
+      "id": "Physics",
+      "name": "Physics"
+    },
+    {
+      "id": "Chemistry",
+      "name": "Chemistry"
+    },
+    {
+      "id": "Biology",
+      "name": "Biology"
+    },
+    {
+      "id": "Computer_science",
+      "name": "Computer Science"
+    },
+    {
+      "id": "art",
+      "name": "Art"
+    },
+    {
+      "id": "Music",
+      "name": "Music"
+    },
+    {
+      "id": "Physical_education",
+      "name": "Physical Education"
+    }
+  ]

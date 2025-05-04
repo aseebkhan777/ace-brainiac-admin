@@ -3,6 +3,7 @@ import Input from "./Input";
 import { Search } from "lucide-react";
 import DateFilter from "./DateFilter";
 import ClassDropdown from "./ClassDropdown";
+import SubjectDropdown from "./SubjectDropdown";
 
 export default function InnerCard({ 
   children,
@@ -18,7 +19,8 @@ export default function InnerCard({
   secondDropdownProps = null,
   dateFilterProps = null, 
   showDivider = true,
-  classDropdownProps = null
+  classDropdownProps = null,
+  subjectDropdownProps = null
 }) {
   return (
     <div className={`bg-white w-full p-6 md:p-8 rounded-lg shadow-sm ${className}`}>
@@ -65,6 +67,18 @@ export default function InnerCard({
               className="w-full md:w-auto bg-secondary"
               required={classDropdownProps.required}
               error={classDropdownProps.error}
+            />
+          )}
+
+          {/* Subject Dropdown */}
+          {subjectDropdownProps && (
+            <SubjectDropdown
+              value={subjectDropdownProps.value}
+              onChange={subjectDropdownProps.onChange}
+              placeholder={subjectDropdownProps.placeholder || "Select subject..."}
+              className="w-full md:w-auto bg-secondary"
+              required={subjectDropdownProps.required}
+              error={subjectDropdownProps.error}
             />
           )}
 

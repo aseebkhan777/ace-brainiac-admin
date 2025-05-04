@@ -50,7 +50,7 @@ const ClassDropdown = ({
         
         {loading ? (
           <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
-            Loading available classes...
+            Loading ..
           </div>
         ) : classOptions.length === 0 && !classesError ? (
           <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">

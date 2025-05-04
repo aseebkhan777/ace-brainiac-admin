@@ -11,6 +11,7 @@ import useGetTest from "../../hooks/useGetTest"
 import useCreateTest from "../../hooks/useCreateTests"
 import useDeleteQuestion from "../../hooks/useDeleteQuestion"
 import ClassDropdown from "../../components/ClassDropdown"
+import SubjectDropdown from "../../components/SubjectDropdown"
 import { LoadingSpinner } from "../../components/Loader"
 
 export default function CreateTests() {
@@ -53,11 +54,6 @@ export default function CreateTests() {
     const { updateTest, loading: updatingTest, error: updateTestError } = useUpdateTest(testId)
     const { deleteQuestion, loading: deletingQuestion, error: deleteQuestionError } = useDeleteQuestion()
 
-    const subjectOptions = [
-        { value: "Math", label: "Math" },
-        { value: "Science", label: "Science" },
-        { value: "History", label: "History" }
-    ]
 
     const statusOptions = [
         { value: "DRAFT", label: "Draft" },
@@ -66,7 +62,7 @@ export default function CreateTests() {
 
     const showNotification = (message, type) => {
         setNotification({ show: true, message, type })
-        setTimeout(() => setNotification({ show: false, message: "", type: "" }), 5000) 
+        setTimeout(() => setNotification({ show: false, message: "", type: "" }), 5000)
     }
 
     useEffect(() => {
@@ -82,7 +78,7 @@ export default function CreateTests() {
 
             if (test.questions && test.questions.length > 0) {
                 const formattedQuestions = test.questions.map(q => ({
-                    id: q.id, 
+                    id: q.id,
                     question: q.question || "",
                     options: q.options?.map(opt => ({
                         text: opt.option || "",
@@ -102,7 +98,7 @@ export default function CreateTests() {
         }
     }, [test]);
 
-   
+
     useEffect(() => {
         if (fetchTestError) {
             showNotification(`Failed to load test: ${fetchTestError}`, "error");
@@ -180,7 +176,7 @@ export default function CreateTests() {
 
         if (!allowedTypes.includes(file.type)) {
             showNotification("Only PDF and image files are allowed", "error")
-            e.target.value = "" 
+            e.target.value = ""
             return
         }
 
@@ -200,7 +196,7 @@ export default function CreateTests() {
                 ),
             )
 
-            e.target.value = "" 
+            e.target.value = ""
         }, 1500)
     }
 
@@ -220,13 +216,13 @@ export default function CreateTests() {
             return false
         }
 
-        // Must have minimum number of options
+
         if (q.options.length < 2) {
             showNotification("At least 2 options are required for each question", "error")
             return false
         }
 
-        // Check for empty options
+
         const emptyOptionIndex = q.options.findIndex(
             option => option.text === undefined || option.text === null || option.text.trim() === ""
         )
@@ -247,27 +243,27 @@ export default function CreateTests() {
     }
 
     const formatQuestionForBulkApi = (q) => {
-        // Only include ID for existing questions with valid UUIDs
+
         const isUUID = (id) => {
             const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             return typeof id === 'string' && regex.test(id);
         };
-    
+
         const questionData = {
             text: q.question,
             file: q.attachment?.file || null,
-            attachment: q.attachment, 
+            attachment: q.attachment,
             options: q.options.map(option => ({
                 text: option.text,
                 is_correct: typeof option.correct === 'boolean' ? option.correct : false
             }))
         };
-    
-        
+
+
         if (q.isExisting && isUUID(q.id)) {
             questionData.id = q.id;
         }
-    
+
         return questionData;
     }
 
@@ -307,7 +303,7 @@ export default function CreateTests() {
 
         const formattedQuestions = validQuestions.map(formatQuestionForBulkApi)
 
-        
+
         const jsonData = {
             questions: formattedQuestions
         }
@@ -421,15 +417,14 @@ export default function CreateTests() {
             <div className="flex-1 flex flex-col pt-14 items-center p-4 md:pt-20 md:px-9 bg-white min-h-screen">
                 {notification.show && (
                     <div
-                        className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 flex items-center ${
-                            notification.type === "success"
+                        className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 flex items-center ${notification.type === "success"
                                 ? "bg-green-500"
                                 : notification.type === "error"
                                     ? "bg-red-500"
                                     : notification.type === "info"
                                         ? "bg-blue-500"
                                         : "bg-yellow-500"
-                        } text-white`}
+                            } text-white`}
                     >
                         {notification.type === "error" && <AlertCircle className="mr-2" size={18} />}
                         {notification.type === "success" && <Check className="mr-2" size={18} />}
@@ -636,12 +631,13 @@ export default function CreateTests() {
                                     />
 
                                     <div className="mb-3">
-                                        <Dropdown
-                                            placeholder="Select Subject *"
-                                            options={subjectOptions}
+                                        <SubjectDropdown
                                             value={settings.subject}
                                             onChange={(newValue) => setSettings({ ...settings, subject: newValue })}
-                                            className="w-full bg-white"
+                                            placeholder="Select Subject *"
+                                            className="w-full"
+                                            bgColor="bg-white"
+                                            required={true}
                                         />
                                     </div>
 

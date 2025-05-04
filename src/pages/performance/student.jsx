@@ -10,18 +10,18 @@ import useAdminStudentPerformance from "../../hooks/useAdminStudentPerformance";
 
 
 export default function AdminStudentPerformance() {
-    const { id } = useParams(); // Get student ID from URL params
+    const { id } = useParams(); 
     const navigate = useNavigate();
     
     const [search, setSearch] = useState("");
-    const [searchQuery, setSearchQuery] = useState(""); // For API calls
+    const [searchQuery, setSearchQuery] = useState(""); 
     const [page, setPage] = useState(1);
     const [subject, setSubject] = useState("");
     const [suspendLoading, setSuspendLoading] = useState(false);
     const [notification, setNotification] = useState(null);
     const itemsPerPage = 9;
     
-    // Using the hook to fetch student data and tests
+    
     const { 
         student, 
         tests, 
@@ -38,13 +38,13 @@ export default function AdminStudentPerformance() {
     const handleSearch = (e) => {
         e.preventDefault();
         setSearchQuery(search);
-        setPage(1); // Reset to first page when searching
+        setPage(1); 
     };
 
     // Handle subject filter change
     const handleSubjectChange = (value) => {
         setSubject(value);
-        setPage(1); // Reset to first page when changing filters
+        setPage(1); 
     };
 
     // Open file in new tab
@@ -67,7 +67,7 @@ export default function AdminStudentPerformance() {
             
             if (result.success) {
                 showNotification(result.message, "success");
-                // Optionally navigate back or refresh data
+                
                 setTimeout(() => {
                     navigate(-1);
                 }, 2000);
@@ -188,27 +188,24 @@ export default function AdminStudentPerformance() {
                             showSearchIcon: true,
                             onSubmit: handleSearch
                         }}
-                        firstDropdownProps={{
+                       subjectDropdownProps={{
                             value: subject,
                             onChange: handleSubjectChange,
                             label: "Subject",
-                            options: [
-                                { value: "", label: "All Subjects" },
-                                { value: "English", label: "English" },
-                                { value: "Science", label: "Science" },
-                                { value: "Math", label: "Math" }
-                            ]
+                            placeholder: "Select Subject ...",
+                            className: "bg-secondary",
+                            
                         }}
-                        secondDropdownProps={{
-                            value: "all",
-                            onChange: () => {},
-                            label: "Status",
-                            options: [
-                                { value: "all", label: "All" },
-                                { value: "completed", label: "Completed" },
-                                { value: "pending", label: "Pending" }
-                            ]
-                        }}
+                        // secondDropdownProps={{
+                        //     value: "all",
+                        //     onChange: () => {},
+                        //     label: "Status",
+                        //     options: [
+                        //         { value: "all", label: "All" },
+                        //         { value: "completed", label: "Completed" },
+                        //         { value: "pending", label: "Pending" }
+                        //     ]
+                        // }}
                     >
                         {testsLoading && (
                             <div className="flex justify-center items-center p-10">

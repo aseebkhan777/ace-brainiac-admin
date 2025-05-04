@@ -40,14 +40,7 @@ export default function WorksheetsPage() {
         }
     }, [deleteSuccess, deleteError, clearDeleteStatus, refetch]);
 
-    // Prepare dropdown options
-    const subjectOptions = [
-        { value: "", label: "All Subjects" },
-        { value: "Mathematics", label: "Mathematics" },
-        { value: "Science", label: "Science" },
-        { value: "English", label: "English" },
-        { value: "Social Studies", label: "Social Studies" }
-    ];
+  
 
 
     const handleAddWorksheet = () => {
@@ -118,16 +111,18 @@ export default function WorksheetsPage() {
                             placeholder: "Search worksheets...",
                             showSearchIcon: true
                         }}
-                        firstDropdownProps={{
+                        subjectDropdownProps={{
                             value: params.subject,
                             onChange: handleSubjectChange,
-                            label: "Subject",
-                            options: subjectOptions
+                            placeholder: "Subject..",
+                            className: "bg-secondary",
+                            bgColor: "bg-secondary"
                         }}
+
                         classDropdownProps={{
                             value: params.class,
                             onChange: handleClassChange,
-                            placeholder: "Class Filter ..",
+                            placeholder: "Class Filter..",
                             className: "bg-secondary"
                         }}
                         dateFilterProps={{

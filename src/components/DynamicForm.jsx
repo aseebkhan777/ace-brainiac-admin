@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { Dropdown } from "./Dropdown";
 import Button from "./Button";
 import ClassDropdown from "./ClassDropdown";
+import SubjectDropdown from "./SubjectDropdown";
 
 const DynamicForm = ({
     title = "Create Form",
@@ -15,7 +16,7 @@ const DynamicForm = ({
     cancelButtonText = "Cancel",
     onCancel
 }) => {
-    // Initialize form state dynamically based on fields
+
     const [formData, setFormData] = useState(
         Object.fromEntries(
             fields.map(field => [field.name, field.defaultValue || ''])
@@ -34,7 +35,7 @@ const DynamicForm = ({
                 [`${fieldName}_uploading`]: true
             }));
 
-            // Simulate upload delay for UI feedback
+            
             setTimeout(() => {
                 setFormData((prev) => ({
                     ...prev,
@@ -63,7 +64,7 @@ const DynamicForm = ({
             return;
         }
 
-        // Call the provided onSubmit function
+        
         onSubmit(formData);
     };
 
@@ -101,6 +102,23 @@ const DynamicForm = ({
             case 'classDropdown':
                 return (
                     <ClassDropdown
+                        key={field.name}
+                        value={formData[field.name]}
+                        onChange={(value) => handleFieldChange(field.name, value)}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        disabled={loading}
+                        required={field.required}
+                        label={field.label}
+                        className="mb-3"
+                        bgColor="bg-white"
+                        error={field.error}
+                    />
+                );
+                
+            case 'subjectDropdown':
+                return (
+                    <SubjectDropdown
                         key={field.name}
                         value={formData[field.name]}
                         onChange={(value) => handleFieldChange(field.name, value)}

@@ -6,20 +6,13 @@ import OuterCard from "../../components/OuterCard";
 import useCreateWorksheet from "../../hooks/useCreateWorksheet";
 import DynamicForm from "../../components/DynamicForm";
 
-// Predefined options for subject and class dropdowns
-const SUBJECT_OPTIONS = [
-    { value: 'Mathematics', label: 'Mathematics' },
-    { value: 'Science', label: 'Science' },
-    { value: 'English', label: 'English' },
-    { value: 'History', label: 'History' },
-    { value: 'Art', label: 'Art' }
-];
+
 
 export default function CreateWorksheet() {
-    // Use the custom hook
+    
     const { createWorksheet, loading, error } = useCreateWorksheet();
 
-    // Define form fields matching the original component
+    
     const WORKSHEET_FIELDS = [
         {
             name: 'title',
@@ -29,10 +22,10 @@ export default function CreateWorksheet() {
         },
         {
             name: 'subject',
-            type: 'dropdown',
+            type: 'subjectDropdown',
             placeholder: 'Select Subject',
             required: true,
-            options: SUBJECT_OPTIONS
+            
         },
         {
             name: 'class',
@@ -61,20 +54,20 @@ export default function CreateWorksheet() {
             return;
         }
 
-        // Call the createWorksheet function from our hook
+       
         const result = await createWorksheet(formData);
         
         if (result.success) {
-            // Show success toast notification and navigate after a slight delay
+            
             toast.success("Worksheet created successfully!", {
                 onClose: () => {
-                    // Navigate after toast closes or after minimum display time
+                    
                     result.navigateTo();
                 },
-                autoClose: 2000 // Ensure toast shows for at least 2 seconds
+                autoClose: 2000 
             });
         } else if (result.error) {
-            // Show error toast
+            
             toast.error(result.error);
         }
     };

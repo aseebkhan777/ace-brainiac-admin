@@ -9,32 +9,29 @@ import useFetchAdminPerformances from "../../hooks/useFetchAdminPerformances";
 
 export default function AdminPerformance() {
     const navigate = useNavigate();
-    
-   
-    const { 
-        performanceData, 
-        loading, 
-        error, 
-        handleChangeParams, 
+
+    const {
+        performanceData,
+        loading,
+        error,
+        handleChangeParams,
         params,
         totalPages,
         totalItems,
-        refetch 
+        refetch
     } = useFetchAdminPerformances();
 
-   
+
     const renderSubjectPills = (subjects) => {
-        
         if (!subjects) return <span className="text-gray-500">No subjects</span>;
-        
-        
+
         const subjectArray = typeof subjects === 'string' ? [subjects] : Array.isArray(subjects) ? subjects : [];
-        
+
         return (
             <div className="flex overflow-x-auto pb-2 mt-2 gap-2">
                 {subjectArray.map((subject, idx) => (
-                    <span 
-                        key={idx} 
+                    <span
+                        key={idx}
                         className="whitespace-nowrap bg-primary text-white text-xs font-medium px-2.5 py-1 rounded-full"
                     >
                         {subject}
@@ -43,15 +40,6 @@ export default function AdminPerformance() {
             </div>
         );
     };
-
-    // Subject options
-    const subjectOptions = [
-        { value: "", label: "All Subjects" },
-        { value: "Science", label: "Science" },
-        { value: "Math", label: "Math" },
-        { value: "English", label: "English" },
-        { value: "History", label: "History" }
-    ];
 
     // Handle pagination
     const handleNextPage = () => {
@@ -68,6 +56,11 @@ export default function AdminPerformance() {
 
     const navigateToStudentPerformance = (studentId) => {
         navigate(`/performance/${studentId}`);
+    };
+
+    // Handle subject change
+    const handleSubjectChange = (value) => {
+        handleChangeParams({ param: 'subject', newValue: value });
     };
 
     return (
@@ -87,11 +80,12 @@ export default function AdminPerformance() {
                             placeholder: "Filter by class...",
                             className: "bg-secondary",
                         }}
-                        secondDropdownProps={{
+                        subjectDropdownProps={{
                             value: params.subject,
-                            onChange: (value) => handleChangeParams({ param: 'subject', newValue: value }),
-                            label: "Subject",
-                            options: subjectOptions
+                            onChange: handleSubjectChange,
+                            placeholder: "Filter by subject",
+                            className: "bg-secondary",
+                            bgColor: "bg-secondary"
                         }}
                         dateFilterProps={{
                             selectedDate: params.date,
@@ -122,16 +116,16 @@ export default function AdminPerformance() {
                                     <div key={index} className="bg-secondary p-4 rounded-lg shadow-md">
                                         <h3 className="text-lg font-semibold">{student.name}</h3>
                                         <p>Class: {student.class}</p>
-                                        
+
                                         {/* Subject Pills Section with horizontal scroll */}
                                         <div className="mt-2">
                                             <p className="text-sm text-gray-600">Subjects:</p>
                                             {renderSubjectPills(student.subjects || student.subject)}
                                         </div>
-                                        
+
                                         <p className="mt-2">Date: {new Date(student.createdAt).toLocaleDateString()}</p>
-                                        <Button 
-                                            variant="secondary" 
+                                        <Button
+                                            variant="secondary"
                                             className="mt-3 w-full"
                                             onClick={() => navigateToStudentPerformance(student.studentId)}
                                         >
