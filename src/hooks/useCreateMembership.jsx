@@ -14,42 +14,49 @@ const useCreateMembership = () => {
     try {
       const api = apiWithAuth();
 
-      // Validate required fields
-      const requiredFields = ['title', 'body', 'price', 'duration'];
+     
+      const baseRequiredFields = ['title', 'body', 'price', 'duration'];
+      const schoolRequiredFields = membershipData.membershipType === 'school' 
+        ? ['studentsLimit', 'teachersLimit', 'testsLimit', 'worksheetsLimit'] 
+        : [];
+      
+      const requiredFields = [...baseRequiredFields, ...schoolRequiredFields];
       const missingFields = requiredFields.filter(field => !membershipData[field]);
 
       if (missingFields.length > 0) {
         throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
       }
 
-      // Create an object with the membership data
+      
       const payload = {
         title: membershipData.title,
         body: membershipData.body,
-        price: Number(membershipData.price), // Ensure price is a number
-        duration: Number(membershipData.duration), // Ensure duration is a number
+        price: Number(membershipData.price),
+        duration: Number(membershipData.duration),
+        membershipType: membershipData.membershipType
       };
 
-      // Debugging: Log payload contents before sending
-      console.log("Membership Data payload:", payload);
-
-      // Send POST request to create membership
-      // Update the endpoint to match your API endpoint for memberships
-      const response = await api.post("/admin/membership", payload);
-
-      console.log("Membership created successfully:", response.data);
       
-      // Return success with navigation function
+      if (membershipData.membershipType === 'school') {
+        payload.studentsLimit = Number(membershipData.studentsLimit);
+        payload.teachersLimit = Number(membershipData.teachersLimit);
+        payload.testsLimit = Number(membershipData.testsLimit);
+        payload.worksheetsLimit = Number(membershipData.worksheetsLimit);
+      }
+
+      const response = await api.post("/admin/membership", payload);
+      
+      
       return { 
         success: true, 
         data: response.data,
-        navigateTo: () => navigate("/memberships") // Return navigation function to be called after toast
+        navigateTo: () => navigate("/memberships") 
       };
 
     } catch (err) {
       console.error("Create membership error:", err);
 
-      // Log full response if available
+      
       if (err.response) {
         console.error("Full Response Data:", err.response);
         console.error("Response Headers:", err.response.headers);

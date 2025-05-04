@@ -10,7 +10,6 @@ import { LoadingSpinner } from "../../components/Loader";
 
 export default function StudentsPage() {
     const navigate = useNavigate();
-
     
     const { 
         students = [], 
@@ -21,8 +20,6 @@ export default function StudentsPage() {
         totalPages,
         refetch 
     } = useFetchStudents();
-
-
    
     const statusOptions = [
         { value: "All", label: "All" },
@@ -41,16 +38,20 @@ export default function StudentsPage() {
         handleChangeParams({ param: 'class', newValue: value });
     };
 
-    // Handle status filter
-    const handleStatusChange = (value) => {
+    // Handle status filter 
+    const handleStatusChange = (event) => {
        
-        if (value === "All") {
-            handleChangeParams({ param: 'status', newValue: undefined });
+        
+        
+        const statusValue = event && event.target ? event.target.value : null;
+        console.log("Status value:", statusValue);
+        
+        if (statusValue === "All") {
+            handleChangeParams({ param: 'status', newValue: '' });
         } else {
-            handleChangeParams({ param: 'status', newValue: value });
+            handleChangeParams({ param: 'status', newValue: statusValue });
         }
     };
-
     
     const handleCreatedDateChange = (date) => {
         handleChangeParams({ param: 'date', newValue: date });
@@ -72,7 +73,6 @@ export default function StudentsPage() {
     };
 
     const handleViewStudent = (studentId) => {
-        
         navigate(`/students/${studentId}`);
     };
 
@@ -95,8 +95,7 @@ export default function StudentsPage() {
                         classDropdownProps={{
                             value: params.class,
                             onChange: handleClassChange,
-                            placeholder: "Filter by class...",
-                            
+                            placeholder: "Filter by class..."
                         }}
                         firstDropdownProps={{
                             value: params.status || "All",
@@ -141,11 +140,12 @@ export default function StudentsPage() {
                                     >
                                         <div className="flex justify-between items-center pb-2">
                                             <h3 className="text-sm font-semibold">{student.name}</h3>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${student.status === 'Active' ? 'bg-green-100 text-green-800' :
-                                                    student.status === 'Inactive' ? 'bg-yellow-100 text-yellow-800' :
-                                                        student.status === 'Suspended' ? 'bg-red-100 text-red-800' :
-                                                            'bg-gray-100 text-gray-800'
-                                                }`}>
+                                            <span className={`text-xs px-2 py-1 rounded-full ${
+                                                student.status === 'Active' ? 'bg-green-100 text-green-800' :
+                                                student.status === 'Inactive' ? 'bg-yellow-100 text-yellow-800' :
+                                                student.status === 'Suspended' ? 'bg-red-100 text-red-800' :
+                                                'bg-gray-100 text-gray-800'
+                                            }`}>
                                                 {student.status || 'Unknown'}
                                             </span>
                                         </div>

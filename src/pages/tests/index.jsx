@@ -35,6 +35,7 @@ export default function TestsPage() {
 
     
     const statusOptions = [
+        { value: "ALL", label: "All" },
         { value: "Draft", label: "Draft" },
         { value: "Published", label: "Published" },
     ];
@@ -51,7 +52,14 @@ export default function TestsPage() {
 
     // Handle status filter
     const handleStatusChange = (e) => {
-        handleChangeParams({ param: 'status', newValue: e.target.value });
+        const newValue = e.target.value;
+        
+        if (newValue === "ALL") {
+            
+            handleChangeParams({ param: 'status', newValue: null });
+        } else {
+            handleChangeParams({ param: 'status', newValue });
+        }
     };
 
     // Handle certification filter
@@ -143,7 +151,7 @@ export default function TestsPage() {
                             showSearchIcon: true
                         }}
                         firstDropdownProps={{
-                            value: params.status,
+                            value: params.status || "ALL", 
                             onChange: handleStatusChange,
                             label: "Status",
                             options: statusOptions

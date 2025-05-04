@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { Tabs, TabsList, TabsTrigger } from "../../components/Tabs"
 import Input from "../../components/Input"
 import Button from "../../components/Button"
-import { Trash2, Upload, Check, Loader, X, AlertCircle } from "lucide-react"
+import { Trash2, Upload, Check, Loader, X, AlertCircle, ExternalLink, Eye } from "lucide-react"
 import { Dropdown } from "../../components/Dropdown"
 import useUpdateTest from "../../hooks/useUpdateTests"
 import useAddQuestion from "../../hooks/useAddQuestion"
@@ -47,6 +47,7 @@ export default function CreateTests() {
     const [removedQuestions, setRemovedQuestions] = useState([])
     const [submitting, setSubmitting] = useState(false)
     const [notification, setNotification] = useState({ show: false, message: "", type: "" })
+    const [previewImage, setPreviewImage] = useState(null)
 
     const { test, loading: fetchingTest, error: fetchTestError } = useGetTest(testId)
     const { createTest, loading: creatingTest } = useCreateTest()
@@ -89,7 +90,7 @@ export default function CreateTests() {
                             { text: "", correct: false },
                             { text: "", correct: false },
                         ],
-                    attachment: q.imageUrl ? { id: Date.now(), name: q.imageUrl, file: null } : null,
+                    attachment: q.imageUrl ? { id: Date.now(), name: q.imageUrl, file: null, url: q.imageUrl } : null,
                     uploading: false,
                     isExisting: true,
                 }));
@@ -148,7 +149,11 @@ export default function CreateTests() {
         ])
     }
 
-    const removeQuestion = async (id, isExisting) => {
+    const removeQuestion = async (e, id, isExisting) => {
+        // Prevent form submission
+        e.preventDefault();
+        e.stopPropagation();
+        
         if (isExisting && testId) {
             setSubmitting(true)
             const success = await deleteQuestion(testId, id)
@@ -171,7 +176,7 @@ export default function CreateTests() {
 
         if (questions[qIndex].uploading) return
 
-        // Check if file is PDF or image
+        
         const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp']
 
         if (!allowedTypes.includes(file.type)) {
@@ -180,16 +185,24 @@ export default function CreateTests() {
             return
         }
 
-        // Set uploading state to true
+       
         setQuestions((prev) => prev.map((q, index) => (index === qIndex ? { ...q, uploading: true } : q)))
 
         setTimeout(() => {
+            
+            const objectUrl = URL.createObjectURL(file);
+            
             setQuestions((prev) =>
                 prev.map((q, index) =>
                     index === qIndex
                         ? {
                             ...q,
-                            attachment: { id: Date.now(), file, name: file.name },
+                            attachment: { 
+                                id: Date.now(), 
+                                file, 
+                                name: file.name,
+                                url: objectUrl 
+                            },
                             uploading: false,
                         }
                         : q,
@@ -201,6 +214,11 @@ export default function CreateTests() {
     }
 
     const removeAttachment = (qIndex) => {
+        
+        if (questions[qIndex].attachment?.url && questions[qIndex].attachment?.file) {
+            URL.revokeObjectURL(questions[qIndex].attachment.url);
+        }
+        
         setQuestions((prev) =>
             prev.map((q, index) =>
                 index === qIndex
@@ -208,6 +226,14 @@ export default function CreateTests() {
                     : q,
             ),
         )
+    }
+
+    const openImagePreview = (url) => {
+        setPreviewImage(url);
+    }
+
+    const closeImagePreview = () => {
+        setPreviewImage(null);
     }
 
     const validateQuestion = (q) => {
@@ -432,6 +458,37 @@ export default function CreateTests() {
                     </div>
                 )}
 
+                {/* Image Preview Modal */}
+                {previewImage && (
+                    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50" onClick={closeImagePreview}>
+                        <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
+                            <button 
+                                className="absolute top-2 right-2 text-gray-700 hover:text-black" 
+                                onClick={closeImagePreview}
+                            >
+                                <X size={24} />
+                            </button>
+                            <img 
+                                src={previewImage} 
+                                alt="Preview" 
+                                className="max-w-full max-h-[80vh] object-contain"
+                            />
+                            <div className="mt-4 flex justify-center">
+                                <a 
+                                    href={previewImage} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    onClick={e => e.stopPropagation()}
+                                >
+                                    <ExternalLink size={18} className="mr-2" />
+                                    Open in new tab
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="w-full max-w-4xl bg-secondary py-14 px-4 md:px-9 rounded-lg shadow-md">
                     <div className="flex justify-between items-center mb-4">
                         <h1 className="text-xl md:text-2xl font-semibold">
@@ -481,11 +538,12 @@ export default function CreateTests() {
                                 <div>
                                     {questions.map((q, qIndex) => (
                                         <div key={q.id} className="relative mb-6 p-4 border rounded-lg bg-white">
-                                            {questions.length > 1 && (
+                                            {questions.length > 0 && (
                                                 <button
-                                                    onClick={() => removeQuestion(q.id, q.isExisting)}
+                                                    onClick={(e) => removeQuestion(e, q.id, q.isExisting)}
                                                     className="absolute top-2 right-2 text-red-500"
                                                     disabled={deletingQuestion}
+                                                    type="button" 
                                                 >
                                                     {deletingQuestion && q.isExisting ? (
                                                         <Loader size={18} className="animate-spin" />
@@ -558,6 +616,18 @@ export default function CreateTests() {
                                                             className="flex items-center bg-gray-50 px-3 py-1 rounded-full text-sm border"
                                                         >
                                                             <span className="truncate max-w-[150px]">{q.attachment.name}</span>
+                                                            
+                                                            {/* Preview button */}
+                                                            {q.attachment.url && (
+                                                                <button
+                                                                    onClick={() => openImagePreview(q.attachment.url)}
+                                                                    className="ml-2 text-blue-500 hover:text-blue-700"
+                                                                    type="button"
+                                                                >
+                                                                    <Eye size={14} />
+                                                                </button>
+                                                            )}
+                                                            
                                                             <button
                                                                 onClick={() => removeAttachment(qIndex)}
                                                                 className="ml-2 text-red-500 hover:text-red-700"
@@ -607,14 +677,24 @@ export default function CreateTests() {
                                                 ))}
                                             </div>
 
-                                            <Button onClick={() => addOption(qIndex)} variant="outline" className="mt-2">
+                                            <Button 
+                                                onClick={() => addOption(qIndex)} 
+                                                variant="outline" 
+                                                className="mt-2"
+                                                type="button"
+                                            >
                                                 + Add Option
                                             </Button>
                                         </div>
                                     ))}
 
                                     <div className="flex justify-start mt-4">
-                                        <Button onClick={addNewQuestion} variant="outline" className="text-black px-4 py-2 text-sm rounded">
+                                        <Button 
+                                            onClick={addNewQuestion} 
+                                            variant="outline" 
+                                            className="text-black px-4 py-2 text-sm rounded"
+                                            type="button"
+                                        >
                                             + Add new question
                                         </Button>
                                     </div>

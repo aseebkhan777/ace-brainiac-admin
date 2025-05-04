@@ -22,8 +22,6 @@ export default function SchoolsPage() {
         refetch 
     } = useFetchSchools();
 
-   
-
     // Handle search
     const handleSearchChange = (e) => {
         handleChangeParams({ param: 'query', newValue: e.target.value });
@@ -31,7 +29,15 @@ export default function SchoolsPage() {
 
     // Handle status filter 
     const handleStatusChange = (e) => {
-        handleChangeParams({ param: 'status', newValue: e.target.value });
+        const newValue = e.target.value;
+        
+        
+        if (newValue === "ALL") {
+            
+            handleChangeParams({ param: 'status', newValue: null });
+        } else {
+            handleChangeParams({ param: 'status', newValue });
+        }
     };
 
     // Handle date filter
@@ -61,14 +67,14 @@ export default function SchoolsPage() {
         navigate(`/schools/${schoolId}`);
     };
 
-    // Status dropdown options
+    // Status dropdown 
     const statusOptions = [
+        { value: "ALL", label: "All" },
         { value: "ACTIVE", label: "Active" },
         { value: "IN_ACTIVE", label: "Inactive" },
         { value: "PENDING", label: "Pending" }
     ];
 
-   
     const getStatusColorClasses = (status) => {
         switch (status) {
             case 'Active':
@@ -101,7 +107,7 @@ export default function SchoolsPage() {
                             showSearchIcon: true
                         }}
                         firstDropdownProps={{
-                            value: params.status,
+                            value: params.status || "ALL", 
                             onChange: handleStatusChange,
                             label: "Status",
                             options: statusOptions

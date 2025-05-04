@@ -28,7 +28,7 @@ export default function InnerCard({
       {showFilters && (
         <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
           
-          <div className="relative w-full md:w-[50%]">
+          <div className="relative w-full md:w-[40%]">
             <Input
               placeholder={searchProps.placeholder}
               value={searchProps.value}
@@ -45,7 +45,14 @@ export default function InnerCard({
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
               value={firstDropdownProps.value || ""}
-              onChange={(e) => firstDropdownProps.onChange(e.target.value)}
+              onChange={(e) => {
+                
+                if (typeof firstDropdownProps.onChange === 'function') {
+                  firstDropdownProps.onChange({
+                    target: { value: e.target.value }
+                  });
+                }
+              }}
             >
               {firstDropdownProps.placeholder && (
                 <option value="">{firstDropdownProps.placeholder || firstDropdownProps.label || "Select..."}</option>
@@ -87,7 +94,14 @@ export default function InnerCard({
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
               value={secondDropdownProps.value || ""}
-              onChange={(e) => secondDropdownProps.onChange(e.target.value)}
+              onChange={(e) => {
+                // Create a fake event object if the parent expects an event
+                if (typeof secondDropdownProps.onChange === 'function') {
+                  secondDropdownProps.onChange({
+                    target: { value: e.target.value }
+                  });
+                }
+              }}
             >
               {secondDropdownProps.placeholder && (
                 <option value="">{secondDropdownProps.placeholder || secondDropdownProps.label || "Select..."}</option>

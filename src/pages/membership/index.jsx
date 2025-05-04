@@ -6,6 +6,7 @@ import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchMemberships from "../../hooks/useFetchMemberships";
+import useDeleteMembership from "../../hooks/useDeleteMembership";
 import { LoadingSpinner } from "../../components/Loader";
 
 export default function MembershipsPage() {
@@ -13,13 +14,20 @@ export default function MembershipsPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDuration, setSelectedDuration] = useState("");
     const [priceRange, setPriceRange] = useState("");
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [membershipToDelete, setMembershipToDelete] = useState(null);
 
     const navigate = useNavigate();
-
-    // Fetch memberships using the custom hook
-    const { memberships = [], loading, error } = useFetchMemberships();
-
-    // Prepare dropdown options
+    
+    const { memberships = [], loading, error, refetch } = useFetchMemberships();
+    const { 
+        deleteMembership, 
+        deleteLoading, 
+        deleteError, 
+        deleteSuccess, 
+        clearDeleteStatus 
+    } = useDeleteMembership();
+    
     const durationOptions = [
         { value: "30", label: "30 Days" },
         { value: "90", label: "90 Days" },
@@ -33,33 +41,29 @@ export default function MembershipsPage() {
         { value: "5001-10000", label: "₹5,001 - ₹10,000" },
         { value: "10001-above", label: "₹10,001+" }
     ];
-
-    // Filter memberships based on search and dropdown filters
-    // Filter memberships based on search and dropdown filters
-const filteredMemberships = memberships.filter(membership => {
-    // Search filter
-    const matchesSearch = searchQuery === "" ||
-        membership.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        membership.body.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Duration filter
-    const matchesDuration = selectedDuration === "" || 
-        membership.duration.toString() === selectedDuration;
-    
-    // Price range filter
-    let matchesPrice = true;
-    if (priceRange !== "") {
-        const [min, max] = priceRange.split('-').map(Number);
-        if (isNaN(max)) {
-            // For "10001-above" case
-            matchesPrice = membership.price >= min;
-        } else {
-            matchesPrice = membership.price >= min && membership.price <= max;
+    const filteredMemberships = memberships.filter(membership => {
+        // Search filter
+        const matchesSearch = searchQuery === "" ||
+            membership.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            membership.body.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        // Duration filter
+        const matchesDuration = selectedDuration === "" || 
+            membership.duration.toString() === selectedDuration;
+        
+        let matchesPrice = true;
+        if (priceRange !== "") {
+            const [min, max] = priceRange.split('-').map(Number);
+            if (isNaN(max)) {
+                matchesPrice = membership.price >= min;
+            } else {
+                matchesPrice = membership.price >= min && membership.price <= max;
+            }
         }
-    }
-    
-    return matchesSearch && matchesDuration && matchesPrice;
-});
+        
+        return matchesSearch && matchesDuration && matchesPrice;
+    });
 
     // Pagination logic
     const itemsPerPage = 6;
@@ -74,8 +78,30 @@ const filteredMemberships = memberships.filter(membership => {
     };
 
     const handleViewMembership = (membershipId) => {
-        // Navigate to the membership details page with the ID as a URL parameter
         navigate(`/memberships/${membershipId}`);
+    };
+
+    const handleDeleteClick = (membership) => {
+        setMembershipToDelete(membership);
+        setShowDeleteConfirm(true);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!membershipToDelete) return;
+        
+        const result = await deleteMembership(membershipToDelete.id);
+        if (result.success) {
+            setShowDeleteConfirm(false);
+            setMembershipToDelete(null);
+            
+            refetch();
+        }
+    };
+
+    const handleCancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setMembershipToDelete(null);
+        clearDeleteStatus();
     };
 
     const formatPrice = (price) => {
@@ -108,7 +134,7 @@ const filteredMemberships = memberships.filter(membership => {
                             value: searchQuery,
                             onChange: (e) => {
                                 setSearchQuery(e.target.value);
-                                setPage(1); // Reset to first page when searching
+                                setPage(1); 
                             },
                             placeholder: "Search memberships...",
                             showSearchIcon: true
@@ -117,7 +143,7 @@ const filteredMemberships = memberships.filter(membership => {
                             value: selectedDuration,
                             onChange: (e) => {
                                 setSelectedDuration(e.target.value);
-                                setPage(1); // Reset to first page when filtering
+                                setPage(1);
                             },
                             label: "Duration",
                             options: durationOptions
@@ -126,7 +152,7 @@ const filteredMemberships = memberships.filter(membership => {
                             value: priceRange,
                             onChange: (e) => {
                                 setPriceRange(e.target.value);
-                                setPage(1); // Reset to first page when filtering
+                                setPage(1);
                             },
                             label: "Price Range",
                             options: priceRangeOptions
@@ -180,11 +206,11 @@ const filteredMemberships = memberships.filter(membership => {
 
                                         <div className="flex justify-center gap-2 mt-3">
                                             <Button
-                                                variant="secondary"
+                                                variant="delete"
                                                 className="mt-3 w-full text-xs"
-                                                onClick={() => handleViewMembership(membership.id)}
+                                                onClick={() => handleDeleteClick(membership)}
                                             >
-                                                View Details
+                                                Delete
                                             </Button>
                                         </div>
                                     </Card>
@@ -215,6 +241,39 @@ const filteredMemberships = memberships.filter(membership => {
                     </InnerCard>
                 </OuterCard>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && membershipToDelete && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+                        <p className="mb-6">Are you sure you want to delete the membership "{membershipToDelete.title}"? This action cannot be undone.</p>
+                        
+                        {deleteError && (
+                            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+                                {deleteError}
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-end gap-3">
+                            <Button
+                                variant="outline"
+                                onClick={handleCancelDelete}
+                                disabled={deleteLoading}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="delete"
+                                onClick={handleConfirmDelete}
+                                disabled={deleteLoading}
+                            >
+                                {deleteLoading ? "Deleting..." : "Delete"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
