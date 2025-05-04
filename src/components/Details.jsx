@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Table from './Table';
 
 export default function Details({
@@ -7,13 +7,13 @@ export default function Details({
   schoolLocation = "",
   studentName = "",
   studentEmail = "",
-  studentAddress = "", // Added address
+  studentAddress = "", 
   studentClass = "",
   joinDate = "",
   membershipType = "",
   expiryDate = "",
   
-  // Counts for the stats boxes
+  
   counts = { students: 0, worksheets: 0, tests: 0, certificates: 0 },
   
   // Table configurations
@@ -27,18 +27,59 @@ export default function Details({
   singleBottomTableTitle = "",
   singleBottomTableData = [],
   
-  // Special configuration for student details
+  
   isStudentDetails = false,
   showTestsAndCertificatesOnly = false,
   
-  // Click handlers
+
   onViewMainTable = () => {},
   onViewLeftTable = () => {},
   onViewRightTable = () => {},
   onViewSingleBottomTable = () => {}
 }) {
-  // Determine which view to show (school or student)
+
+  const [showAllMain, setShowAllMain] = useState(false);
+  const [showAllLeft, setShowAllLeft] = useState(false);
+  const [showAllRight, setShowAllRight] = useState(false);
+  const [showAllSingle, setShowAllSingle] = useState(false);
+  
+  
   const isSchoolView = !isStudentDetails;
+  
+
+  const hasMembership = membershipType && membershipType !== "Unknown" && expiryDate && expiryDate !== "Invalid Date";
+  
+
+  const handleSeeAllMain = (e) => {
+    e.preventDefault();
+    setShowAllMain(!showAllMain);
+  };
+  
+  const handleSeeAllLeft = (e) => {
+    e.preventDefault();
+    setShowAllLeft(!showAllLeft);
+  };
+  
+  const handleSeeAllRight = (e) => {
+    e.preventDefault();
+    setShowAllRight(!showAllRight);
+  };
+  
+  const handleSeeAllSingle = (e) => {
+    e.preventDefault();
+    setShowAllSingle(!showAllSingle);
+  };
+  
+ 
+  const displayMainData = showAllMain ? mainTableData : mainTableData.slice(0, 5);
+  const displayLeftData = showAllLeft ? leftTableData : leftTableData.slice(0, 5);
+  const displayRightData = showAllRight ? rightTableData : rightTableData.slice(0, 5);
+  const displaySingleData = showAllSingle 
+    ? (singleBottomTableData || leftTableData) 
+    : (singleBottomTableData || leftTableData).slice(0, 5);
+  
+
+  const scrollableMaxHeight = "max-h-96";
   
   return (
     <div className="w-full">
@@ -73,18 +114,22 @@ export default function Details({
           </div>
           
           {/* Membership Info - For both School and Student view */}
-          {membershipType && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 pt-2">
-                <span className="font-medium pl-4">{membershipType} Membership</span>
-                <span className="text-sm text-gray-600">Will expire at {expiryDate}</span>
-              </div>
+          <div className="mb-6">
+            <div className="flex items-center gap-2 pt-2">
+              {hasMembership ? (
+                <>
+                  <span className="font-medium pl-4">{membershipType} Membership</span>
+                  <span className="text-sm text-gray-600">Will expire at {expiryDate}</span>
+                </>
+              ) : (
+                <span className="font-medium pl-4 text-gray-600">Not Subscribed to any Membership</span>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Stats Boxes */}
           <div className="flex gap-3">
-            {/* For School View - Three boxes */}
+          
             {isSchoolView && !studentName && (
               <>
                 <div className="flex-1 bg-gradient-to-br from-primary to-green-700 text-white rounded-lg p-4 flex flex-col items-center justify-center">
@@ -122,14 +167,24 @@ export default function Details({
         <div className="md:w-1/2">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-medium">{mainTableTitle}</h2>
-            <a href="#" className="text-sm text-blue-600 hover:underline">see all</a>
+            {mainTableData.length > 5 && (
+              <a 
+                href="#" 
+                onClick={handleSeeAllMain} 
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {showAllMain ? "show less" : `see all (${mainTableData.length})`}
+              </a>
+            )}
           </div>
-          <Table 
-            data={mainTableData}
-            secondColumnName="Name"
-            onView={onViewMainTable}
-            cardClassName="bg-gray-50"
-          />
+          <div className={showAllMain ? `overflow-y-auto ${scrollableMaxHeight}` : ""}>
+            <Table 
+              data={displayMainData}
+              secondColumnName="Name"
+              onView={onViewMainTable}
+              cardClassName="bg-gray-50"
+            />
+          </div>
         </div>
       </div>
 
@@ -140,28 +195,48 @@ export default function Details({
           <div>
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-lg font-medium">{leftTableTitle}</h2>
-              <a href="#" className="text-sm text-blue-600 hover:underline">see all</a>
+              {leftTableData.length > 5 && (
+                <a 
+                  href="#" 
+                  onClick={handleSeeAllLeft} 
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {showAllLeft ? "show less" : `see all (${leftTableData.length})`}
+                </a>
+              )}
             </div>
-            <Table 
-              data={leftTableData}
-              secondColumnName="Name"
-              onView={onViewLeftTable}
-              cardClassName="bg-gray-50"
-            />
+            <div className={showAllLeft ? `overflow-y-auto ${scrollableMaxHeight}` : ""}>
+              <Table 
+                data={displayLeftData}
+                secondColumnName="Name"
+                onView={onViewLeftTable}
+                cardClassName="bg-gray-50"
+              />
+            </div>
           </div>
 
           {/* Right Table */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-lg font-medium">{rightTableTitle}</h2>
-              <a href="#" className="text-sm text-blue-600 hover:underline">see all</a>
+              {rightTableData.length > 5 && (
+                <a 
+                  href="#" 
+                  onClick={handleSeeAllRight} 
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  {showAllRight ? "show less" : `see all (${rightTableData.length})`}
+                </a>
+              )}
             </div>
-            <Table 
-              data={rightTableData}
-              secondColumnName="Name"
-              onView={onViewRightTable}
-              cardClassName="bg-gray-50"
-            />
+            <div className={showAllRight ? `overflow-y-auto ${scrollableMaxHeight}` : ""}>
+              <Table 
+                data={displayRightData}
+                secondColumnName="Name"
+                onView={onViewRightTable}
+                cardClassName="bg-gray-50"
+              />
+            </div>
           </div>
         </div>
       )}
@@ -171,14 +246,24 @@ export default function Details({
         <div className="w-full">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-medium">{singleBottomTableTitle || leftTableTitle}</h2>
-            <a href="#" className="text-sm text-blue-600 hover:underline">see all</a>
+            {(singleBottomTableData || leftTableData).length > 5 && (
+              <a 
+                href="#" 
+                onClick={handleSeeAllSingle} 
+                className="text-sm text-blue-600 hover:underline"
+              >
+                {showAllSingle ? "show less" : `see all (${(singleBottomTableData || leftTableData).length})`}
+              </a>
+            )}
           </div>
-          <Table 
-            data={singleBottomTableData || leftTableData}
-            secondColumnName="Name"
-            onView={onViewSingleBottomTable || onViewLeftTable}
-            cardClassName="bg-gray-50"
-          />
+          <div className={showAllSingle ? `overflow-y-auto ${scrollableMaxHeight}` : ""}>
+            <Table 
+              data={displaySingleData}
+              secondColumnName="Name"
+              onView={onViewSingleBottomTable || onViewLeftTable}
+              cardClassName="bg-gray-50"
+            />
+          </div>
         </div>
       )}
     </div>

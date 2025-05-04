@@ -12,18 +12,18 @@ const ClassDropdown = ({
     required = false,
     label,
     error,
-    bgColor = "bg-secondary" // Default to bg-secondary but allow override
+    bgColor = "bg-secondary" 
 }) => {
     const { classes, loading, error: classesError } = useGetClasses();
     
-    // Format class options for the dropdown
+   
     const classOptions = !loading && classes.length > 0 ? classes.map(classItem => ({
       value: classItem.class,
       label: `Class ${classItem.class}`,
       id: classItem.id
     })) : [];
   
-    // Handle change events consistently
+   
     const handleChange = (selectedValue) => {
       if (selectedValue && typeof selectedValue === 'object' && selectedValue.value) {
         onChange(selectedValue.value);
@@ -65,7 +65,7 @@ const ClassDropdown = ({
             disabled={disabled || loading}
             className="w-full"
             showClearButton={true}
-            bgColor={bgColor} // Pass the bgColor prop through
+            bgColor={bgColor} 
           />
         )}
       </div>

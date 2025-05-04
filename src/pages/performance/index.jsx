@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -9,60 +9,25 @@ import useFetchAdminPerformances from "../../hooks/useFetchAdminPerformances";
 
 export default function AdminPerformance() {
     const navigate = useNavigate();
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedClass, setSelectedClass] = useState("");
-    const [subjectFilter, setSubjectFilter] = useState("");
-    const [dateFilter, setDateFilter] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6;
     
-    // Use the custom hook to fetch data
+   
     const { 
         performanceData, 
-        totalCount, 
         loading, 
-        error 
-    } = useFetchAdminPerformances(
-        currentPage,
-        itemsPerPage,
-        searchQuery,
-        selectedClass,
-        subjectFilter,
-        dateFilter
-    );
+        error, 
+        handleChangeParams, 
+        params,
+        totalPages,
+        totalItems,
+        refetch 
+    } = useFetchAdminPerformances();
 
-    // Calculate total pages based on the total count from the API
-    const totalPages = Math.ceil(totalCount / itemsPerPage);
-
-    // Handle debounced search
-    const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
-    
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setSearchQuery(debouncedSearch);
-        }, 500);
-        
-        return () => clearTimeout(timer);
-    }, [debouncedSearch]);
-
-    const handleNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-    };
-
-    const handlePrevPage = () => {
-        if (currentPage > 1) setCurrentPage(currentPage - 1);
-    };
-
-    const navigateToStudentPerformance = (studentId) => {
-        navigate(`/performance/${studentId}`);
-    };
-
-    // Helper function to render subject pills
+   
     const renderSubjectPills = (subjects) => {
-        // If subject is a string, convert to array
+        
         if (!subjects) return <span className="text-gray-500">No subjects</span>;
         
-        // If subject is a string, convert to array, otherwise use as is if it's already an array
+        
         const subjectArray = typeof subjects === 'string' ? [subjects] : Array.isArray(subjects) ? subjects : [];
         
         return (
@@ -81,11 +46,29 @@ export default function AdminPerformance() {
 
     // Subject options
     const subjectOptions = [
+        { value: "", label: "All Subjects" },
         { value: "Science", label: "Science" },
         { value: "Math", label: "Math" },
         { value: "English", label: "English" },
         { value: "History", label: "History" }
     ];
+
+    // Handle pagination
+    const handleNextPage = () => {
+        if (params.page < totalPages) {
+            handleChangeParams({ param: 'page', newValue: params.page + 1 });
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (params.page > 1) {
+            handleChangeParams({ param: 'page', newValue: params.page - 1 });
+        }
+    };
+
+    const navigateToStudentPerformance = (studentId) => {
+        navigate(`/performance/${studentId}`);
+    };
 
     return (
         <div className="flex min-h-screen bg-white">
@@ -93,35 +76,26 @@ export default function AdminPerformance() {
                 <OuterCard title="Admin Performance" className="w-full max-w-5xl">
                     <InnerCard
                         searchProps={{
-                            value: debouncedSearch,
-                            onChange: (e) => setDebouncedSearch(e.target.value),
+                            value: params.query,
+                            onChange: (e) => handleChangeParams({ param: 'query', newValue: e.target.value }),
                             placeholder: "Search students...",
                             showSearchIcon: true
                         }}
                         classDropdownProps={{
-                            value: selectedClass,
-                            onChange: (value) => {
-                                setSelectedClass(value);
-                                setCurrentPage(1); // Reset to first page when filtering
-                            },
+                            value: params.class,
+                            onChange: (value) => handleChangeParams({ param: 'class', newValue: value }),
                             placeholder: "Filter by class...",
                             className: "bg-secondary",
                         }}
                         secondDropdownProps={{
-                            value: subjectFilter,
-                            onChange: (value) => {
-                                setSubjectFilter(value);
-                                setCurrentPage(1);
-                            },
+                            value: params.subject,
+                            onChange: (value) => handleChangeParams({ param: 'subject', newValue: value }),
                             label: "Subject",
                             options: subjectOptions
                         }}
                         dateFilterProps={{
-                            value: dateFilter,
-                            onChange: (e) => {
-                                setDateFilter(e.target.value);
-                                setCurrentPage(1);
-                            },
+                            selectedDate: params.date,
+                            onDateChange: (date) => handleChangeParams({ param: 'date', newValue: date }),
                             label: "Date"
                         }}
                     >
@@ -132,6 +106,11 @@ export default function AdminPerformance() {
                         ) : error ? (
                             <div className="text-center text-red-500 p-4">
                                 {error}
+                                <div className="mt-2">
+                                    <Button variant="secondary" onClick={refetch}>
+                                        Retry
+                                    </Button>
+                                </div>
                             </div>
                         ) : performanceData.length === 0 ? (
                             <div className="text-center p-4">
@@ -169,18 +148,18 @@ export default function AdminPerformance() {
                                     variant="secondary"
                                     className="px-4 py-2 mx-2"
                                     onClick={handlePrevPage}
-                                    disabled={currentPage === 1}
+                                    disabled={params.page === 1}
                                 >
                                     <ChevronLeft />
                                 </Button>
                                 <span>
-                                    {currentPage} of {totalPages}
+                                    {params.page} of {totalPages}
                                 </span>
                                 <Button
                                     variant="secondary"
                                     className="px-4 py-2 mx-2"
                                     onClick={handleNextPage}
-                                    disabled={currentPage === totalPages}
+                                    disabled={params.page === totalPages}
                                 >
                                     <ChevronRight />
                                 </Button>

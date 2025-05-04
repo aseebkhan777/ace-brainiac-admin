@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { ToastContainer } from "react-toastify";
@@ -15,13 +15,20 @@ import AddClassModal from "../../components/modal";
 export default function ClassesPage() {
     const [page, setPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
+    const [searchTimeout, setSearchTimeout] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [itemsPerPage] = useState(6); 
 
     const navigate = useNavigate();
 
-    // Fetch classes using the custom hook
-    const { classes = [], loading, error } = useFetchClasses(refreshKey);
+    
+    const { classes = [], loading, error, pagination } = useFetchClasses(
+        page, 
+        searchQuery, 
+        itemsPerPage, 
+        refreshKey
+    );
 
     // Add class hook
     const { addClass, loading: addLoading } = useAddClass();
@@ -29,19 +36,26 @@ export default function ClassesPage() {
     // Delete class hook
     const { deleteClass, loading: deleteLoading } = useDeleteClass();
 
-    // Filter classes based on search
-    const filteredClasses = classes.filter(classItem =>
-        searchQuery === "" ||
-        classItem.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+   
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        
+       
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
 
-    // Pagination logic
-    const itemsPerPage = 6;
-    const totalPages = Math.ceil(filteredClasses.length / itemsPerPage);
-    const paginatedClasses = filteredClasses.slice(
-        (page - 1) * itemsPerPage,
-        page * itemsPerPage
-    );
+       
+        setSearchQuery(value);
+        
+        // Debounce the API call
+        const timeout = setTimeout(() => {
+            
+            setPage(1);
+        }, 500); 
+        
+        setSearchTimeout(timeout);
+    };
 
     const handleAddClass = () => {
         setIsModalOpen(true);
@@ -50,7 +64,7 @@ export default function ClassesPage() {
     const handleAddClassSubmit = async (className) => {
         const result = await addClass(className);
         if (result) {
-            // Refresh the classes list after adding
+           
             setRefreshKey(prev => prev + 1);
         }
         return result;
@@ -60,8 +74,12 @@ export default function ClassesPage() {
         if (window.confirm("Are you sure you want to delete this class?")) {
             const result = await deleteClass(classId);
             if (result) {
-                // Refresh the classes list after deletion
-                setRefreshKey(prev => prev + 1);
+                if (classes.length === 1 && page > 1) {
+                    setPage(prev => prev - 1);
+                } else {
+                    
+                    setRefreshKey(prev => prev + 1);
+                }
             }
         }
     };
@@ -81,7 +99,7 @@ export default function ClassesPage() {
                     <InnerCard
                         searchProps={{
                             value: searchQuery,
-                            onChange: (e) => setSearchQuery(e.target.value),
+                            onChange: handleSearchChange,
                             placeholder: "Search classes...",
                             showSearchIcon: true
                         }}
@@ -93,14 +111,14 @@ export default function ClassesPage() {
                         {error && <div className="text-red-500 text-center py-4">{error}</div>}
 
                         {/* No Classes State */}
-                        {!loading && !error && paginatedClasses.length === 0 && (
+                        {!loading && !error && classes.length === 0 && (
                             <div className="text-center py-4">No classes found</div>
                         )}
 
                         {/* Classes Cards Section */}
                         <div className="mt-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                                {paginatedClasses.map((classItem) => (
+                                {classes.map((classItem) => (
                                     <Card
                                         key={classItem.id}
                                         height="h-[170px]"
@@ -143,16 +161,18 @@ export default function ClassesPage() {
                             <Button
                                 variant="outline"
                                 onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
+                                disabled={!pagination.hasPreviousPage}
                                 className="px-2 py-1"
                             >
                                 <ChevronLeft size={16} />
                             </Button>
-                            <span className="text-sm">{page} of {totalPages || 1}</span>
+                            <span className="text-sm">
+                                {pagination.currentPage} of {pagination.totalPages || 1}
+                            </span>
                             <Button
                                 variant="outline"
                                 onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages || totalPages === 0}
+                                disabled={!pagination.hasNextPage}
                                 className="px-2 py-1"
                             >
                                 <ChevronRight size={16} />

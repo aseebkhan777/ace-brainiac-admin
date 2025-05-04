@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, School, MapPin, User } from "lucide-react";
 import Card from "../../components/Card";
@@ -10,43 +10,49 @@ import { LoadingSpinner } from "../../components/Loader";
 
 export default function SchoolsPage() {
     const [page, setPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedType, setSelectedType] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("");
-    const [selectedDate, setSelectedDate] = useState("");
-
     const navigate = useNavigate();
 
-    // Fetch schools using the custom hook
-    const { schools = [], loading, error, handleChangeParams, params } = useFetchSchools();
+    const { 
+        schools = [], 
+        loading, 
+        error, 
+        handleChangeParams, 
+        params, 
+        totalPages,
+        refetch 
+    } = useFetchSchools();
 
-    // Prepare dropdown options with all available statuses
-    const statusOptions = [
-        { value: "Active", label: "Active" },
-        { value: "Suspended", label: "Suspended" },
-        { value: "Blacklisted", label: "Blacklisted" },
-        { value: "Pending", label: "Pending" }
-    ];
+   
 
-    // Filter schools based on search and dropdown filters
-    // Using user.status instead of school.status for filtering
-    const filteredSchools = schools.filter(school =>
-        (searchQuery === "" ||
-            school.schoolName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            school.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            school.state?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-        (selectedType === "" || school.type === selectedType) &&
-        (selectedStatus === "" || (school.user && school.user.status === selectedStatus))
-    );
+    // Handle search
+    const handleSearchChange = (e) => {
+        handleChangeParams({ param: 'query', newValue: e.target.value });
+    };
 
-    // Pagination logic
-    const itemsPerPage = 6;
-    const totalPages = Math.ceil(filteredSchools.length / itemsPerPage);
-    const paginatedSchools = filteredSchools.slice(
-        (page - 1) * itemsPerPage,
-        page * itemsPerPage
-    );
+    // Handle status filter 
+    const handleStatusChange = (e) => {
+        handleChangeParams({ param: 'status', newValue: e.target.value });
+    };
 
+    // Handle date filter
+    const handleDateChange = (date) => {
+        handleChangeParams({ param: 'createDate', newValue: date });
+    };
+
+    // Handle pagination
+    const handleNextPage = () => {
+        const nextPage = page + 1;
+        handleChangeParams({ param: 'page', newValue: nextPage });
+        setPage(nextPage);
+    };
+
+    const handlePrevPage = () => {
+        const prevPage = Math.max(1, page - 1);
+        handleChangeParams({ param: 'page', newValue: prevPage });
+        setPage(prevPage);
+    };
+
+    // Navigation
     const handleAddSchool = () => {
         navigate("/schools/create");
     };
@@ -55,7 +61,14 @@ export default function SchoolsPage() {
         navigate(`/schools/${schoolId}`);
     };
 
-    // Helper function to determine status color
+    // Status dropdown options
+    const statusOptions = [
+        { value: "ACTIVE", label: "Active" },
+        { value: "IN_ACTIVE", label: "Inactive" },
+        { value: "PENDING", label: "Pending" }
+    ];
+
+   
     const getStatusColorClasses = (status) => {
         switch (status) {
             case 'Active':
@@ -82,20 +95,20 @@ export default function SchoolsPage() {
                 >
                     <InnerCard
                         searchProps={{
-                            value: searchQuery,
-                            onChange: (e) => setSearchQuery(e.target.value),
+                            value: params.query,
+                            onChange: handleSearchChange,
                             placeholder: "Search schools...",
                             showSearchIcon: true
                         }}
                         firstDropdownProps={{
-                            value: selectedStatus,
-                            onChange: (e) => setSelectedStatus(e.target.value),
+                            value: params.status,
+                            onChange: handleStatusChange,
                             label: "Status",
                             options: statusOptions
                         }}
                         dateFilterProps={{
-                            selectedDate: selectedDate,
-                            onDateChange: (date) => setSelectedDate(date),
+                            selectedDate: params.createDate,
+                            onDateChange: handleDateChange,
                             label: "Date Filter"
                         }}
                     >
@@ -106,14 +119,21 @@ export default function SchoolsPage() {
                         {error && <div className="text-red-500 text-center py-4">{error}</div>}
 
                         {/* No Schools State */}
-                        {!loading && !error && paginatedSchools.length === 0 && (
-                            <div className="text-center py-4">No schools found</div>
+                        {!loading && !error && schools.length === 0 && (
+                            <div className="text-center py-4">
+                                No schools found
+                                <div className="mt-2">
+                                    <Button variant="secondary" onClick={refetch}>
+                                        Retry
+                                    </Button>
+                                </div>
+                            </div>
                         )}
 
                         {/* Schools Cards Section */}
                         <div className="mt-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                                {paginatedSchools.map((school) => (
+                                {schools.map((school) => (
                                     <Card
                                         key={school.id}
                                         height="h-[180px]"
@@ -121,8 +141,8 @@ export default function SchoolsPage() {
                                     >
                                         <div className="flex justify-between items-center pb-2">
                                             <h3 className="text-sm font-semibold truncate">{school.schoolName}</h3>
-                                            <span className={`text-xs px-2 py-1 rounded-full ${getStatusColorClasses(school.user?.status || 'Unknown')}`}>
-                                                {school.user?.status || 'Unknown'}
+                                            <span className={`text-xs px-2 py-1 rounded-full ${getStatusColorClasses(school.status === 'ACTIVE' ? 'Active' : (school.status === 'PENDING' ? 'Pending' : school.status))}`}>
+                                                {school.status === 'ACTIVE' ? 'Active' : (school.status === 'PENDING' ? 'Pending' : school.status)}
                                             </span>
                                         </div>
 
@@ -159,25 +179,27 @@ export default function SchoolsPage() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center items-center gap-3 mt-5">
-                            <Button
-                                variant="outline"
-                                onClick={() => handleChangeParams({param: 'limit', newValue: params.limit - 1})}
-                                disabled={params.limit === 1}
-                                className="px-2 py-1"
-                            >
-                                <ChevronLeft size={16} />
-                            </Button>
-                            <span className="text-sm">{page} of {totalPages || 1}</span>
-                            <Button
-                                variant="outline"
-                                onClick={() => handleChangeParams({param: 'limit', newValue: params.limit + 1})}
-                                disabled={params.offset > 100}
-                                className="px-2 py-1"
-                            >
-                                <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                        {schools.length > 0 && (
+                            <div className="flex justify-center items-center gap-3 mt-5">
+                                <Button
+                                    variant="outline"
+                                    onClick={handlePrevPage}
+                                    disabled={page === 1}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronLeft size={16} />
+                                </Button>
+                                <span className="text-sm">{page} of {totalPages || 1}</span>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleNextPage}
+                                    disabled={page >= totalPages}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
+                        )}
                     </InnerCard>
                 </OuterCard>
             </div>

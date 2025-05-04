@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, FileText, CheckCircle, Loader, Trash2, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, CheckCircle, Eye, Trash2 } from "lucide-react";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
@@ -13,24 +13,27 @@ import { LoadingSpinner } from "../../components/Loader";
 import CreateTestModal from "../../components/TestModal";
 
 export default function TestsPage() {
-    const [page, setPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("");
-    const [selectedCertification, setSelectedCertification] = useState("");
-    const [dateFilter, setDateFilter] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formError, setFormError] = useState(null);
-
     const navigate = useNavigate();
 
-    // Fetch tests using the custom hook
-    const { tests = [], loading, error, fetchTests } = useFetchTests();
-    // Add the createTest hook
+    
+    const { 
+        tests = [], 
+        loading, 
+        error, 
+        handleChangeParams, 
+        params, 
+        totalPages,
+        refetch 
+    } = useFetchTests();
+
+    
     const { createTest, loading: creatingTest, error: createError } = useCreateTest();
-    // Add the deleteTest hook
+    
     const { deleteTest, loading: deletingTest, error: deleteError } = useDeleteTest();
 
-    // Prepare dropdown options
+    
     const statusOptions = [
         { value: "Draft", label: "Draft" },
         { value: "Published", label: "Published" },
@@ -41,36 +44,36 @@ export default function TestsPage() {
         { value: "false", label: "Not Available" }
     ];
 
-    // Filter tests based on search and dropdown filters
-    const filteredTests = tests.filter(test => {
-        // Basic filters (search, status, certification)
-        const basicFiltersPassed = (
-            (searchQuery === "" ||
-                test.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                test.description?.toLowerCase().includes(searchQuery.toLowerCase())) &&
-            (selectedStatus === "" || test.status === selectedStatus) &&
-            (selectedCertification === "" ||
-                (selectedCertification === "true" && test.certificationAvailable) ||
-                (selectedCertification === "false" && !test.certificationAvailable))
-        );
+    // Handle search
+    const handleSearchChange = (e) => {
+        handleChangeParams({ param: 'query', newValue: e.target.value });
+    };
 
-        // Date filter
-        if (dateFilter && basicFiltersPassed) {
-            const filterDate = new Date(dateFilter).setHours(0, 0, 0, 0);
-            const testDate = new Date(test.createdAt).setHours(0, 0, 0, 0);
-            return testDate === filterDate;
-        }
+    // Handle status filter
+    const handleStatusChange = (e) => {
+        handleChangeParams({ param: 'status', newValue: e.target.value });
+    };
 
-        return basicFiltersPassed;
-    });
+    // Handle certification filter
+    const handleCertificationChange = (e) => {
+        handleChangeParams({ param: 'certification', newValue: e.target.value });
+    };
 
-    // Pagination logic
-    const itemsPerPage = 6;
-    const totalPages = Math.ceil(filteredTests.length / itemsPerPage);
-    const paginatedTests = filteredTests.slice(
-        (page - 1) * itemsPerPage,
-        page * itemsPerPage
-    );
+    // Handle date filter
+    const handleDateChange = (date) => {
+        handleChangeParams({ param: 'createDate', newValue: date });
+    };
+
+    // Handle pagination
+    const handleNextPage = () => {
+        const nextPage = params.page + 1;
+        handleChangeParams({ param: 'page', newValue: nextPage });
+    };
+
+    const handlePrevPage = () => {
+        const prevPage = Math.max(1, params.page - 1);
+        handleChangeParams({ param: 'page', newValue: prevPage });
+    };
 
     // Modal handling
     const handleCreateTestClick = () => {
@@ -106,14 +109,14 @@ export default function TestsPage() {
 
     // Handle test deletion
     const handleDeleteTest = async (testId, e) => {
-        if (e) e.stopPropagation(); // Prevent triggering other click events
+        if (e) e.stopPropagation(); 
 
         if (window.confirm("Are you sure you want to delete this test? This action cannot be undone.")) {
             try {
                 const success = await deleteTest(testId);
                 if (success) {
-                    // Refresh the tests list after successful deletion
-                    fetchTests();
+                    
+                    refetch();
                 }
             } catch (err) {
                 console.error("Error deleting test:", err);
@@ -134,26 +137,26 @@ export default function TestsPage() {
                 >
                     <InnerCard
                         searchProps={{
-                            value: searchQuery,
-                            onChange: (e) => setSearchQuery(e.target.value),
+                            value: params.query,
+                            onChange: handleSearchChange,
                             placeholder: "Search tests...",
                             showSearchIcon: true
                         }}
                         firstDropdownProps={{
-                            value: selectedStatus,
-                            onChange: (e) => setSelectedStatus(e.target.value),
+                            value: params.status,
+                            onChange: handleStatusChange,
                             label: "Status",
                             options: statusOptions
                         }}
                         secondDropdownProps={{
-                            value: selectedCertification,
-                            onChange: (e) => setSelectedCertification(e.target.value),
+                            value: params.certification,
+                            onChange: handleCertificationChange,
                             label: "Certification",
                             options: certificationOptions
                         }}
                         dateFilterProps={{
-                            selectedDate: dateFilter,
-                            onDateChange: setDateFilter,
+                            selectedDate: params.createDate,
+                            onDateChange: handleDateChange,
                             label: "Creation Date"
                         }}
                     >
@@ -168,14 +171,21 @@ export default function TestsPage() {
                         }
 
                         {/* No Tests State */}
-                        {!loading && !error && paginatedTests.length === 0 && (
-                            <div className="text-center py-4">No tests found</div>
+                        {!loading && !error && tests.length === 0 && (
+                            <div className="text-center py-4">
+                                No tests found
+                                <div className="mt-2">
+                                    <Button variant="secondary" onClick={refetch}>
+                                        Retry
+                                    </Button>
+                                </div>
+                            </div>
                         )}
 
                         {/* Tests Cards Section */}
                         <div className="mt-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                                {paginatedTests.map((test) => (
+                                {tests.map((test) => (
                                     <Card
                                         key={test.id}
                                         height="h-[220px]"
@@ -246,25 +256,27 @@ export default function TestsPage() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center items-center gap-3 mt-5">
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
-                                className="px-2 py-1"
-                            >
-                                <ChevronLeft size={16} />
-                            </Button>
-                            <span className="text-sm">{page} of {totalPages || 1}</span>
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages || totalPages === 0}
-                                className="px-2 py-1"
-                            >
-                                <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                        {tests.length > 0 && (
+                            <div className="flex justify-center items-center gap-3 mt-5">
+                                <Button
+                                    variant="outline"
+                                    onClick={handlePrevPage}
+                                    disabled={params.page === 1}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronLeft size={16} />
+                                </Button>
+                                <span className="text-sm">{params.page} of {totalPages || 1}</span>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleNextPage}
+                                    disabled={params.page >= totalPages}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
+                        )}
                     </InnerCard>
                 </OuterCard>
             </div>

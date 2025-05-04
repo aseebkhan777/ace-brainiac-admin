@@ -6,10 +6,10 @@ import DynamicForm from "../../components/DynamicForm";
 import useCreateSchool from "../../hooks/useCreateSchool";
 
 export default function CreateSchool() {
-    // Use the custom hook for creating a school
+  
     const { createSchool, loading, error } = useCreateSchool();
 
-    // Define form fields matching exactly the provided JSON schema
+   
     const SCHOOL_FIELDS = [
         // School Information
         {
@@ -88,17 +88,17 @@ export default function CreateSchool() {
     ];
 
     const handleSubmit = async (formData) => {
-        // Call the createSchool function from our hook
+        
         const result = await createSchool(formData);
         
         if (result.success) {
-            // Show success toast notification and navigate after toast closes
+            
             toast.success("School created successfully!", {
                 onClose: () => {
-                    // Navigate after toast closes
+                    
                     result.navigateTo();
                 },
-                autoClose: 2000 // Ensure toast shows for at least 2 seconds
+                autoClose: 2000 
             });
         } else if (result.error) {
             // Show error toast
@@ -108,19 +108,7 @@ export default function CreateSchool() {
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            {/* ToastContainer for notifications */}
-            <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={true}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
-
+           
             {/* Main Content */}
             <div className="flex-1 flex flex-col items-center justify-center p-4">
                 {/* Outer Section */}

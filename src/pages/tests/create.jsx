@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import { Tabs, TabsList, TabsTrigger } from "../../components/Tabs"
 import Input from "../../components/Input"
 import Button from "../../components/Button"
-import { Trash2, Upload, Check, Loader, X } from "lucide-react"
+import { Trash2, Upload, Check, Loader, X, AlertCircle } from "lucide-react"
 import { Dropdown } from "../../components/Dropdown"
 import useUpdateTest from "../../hooks/useUpdateTests"
 import useAddQuestion from "../../hooks/useAddQuestion"
@@ -28,7 +28,7 @@ export default function CreateTests() {
                 { text: "", correct: false },
                 { text: "", correct: false },
             ],
-            attachment: null, // Changed from attachments array to single attachment
+            attachment: null,
             uploading: false,
             isExisting: false,
         },
@@ -59,12 +59,6 @@ export default function CreateTests() {
         { value: "History", label: "History" }
     ]
 
-    const classOptions = [
-        { value: "Grade 1", label: "Grade 1" },
-        { value: "Grade 2", label: "Grade 2" },
-        { value: "Grade 3", label: "Grade 3" }
-    ]
-
     const statusOptions = [
         { value: "DRAFT", label: "Draft" },
         { value: "PUBLISHED", label: "Published" }
@@ -72,7 +66,7 @@ export default function CreateTests() {
 
     const showNotification = (message, type) => {
         setNotification({ show: true, message, type })
-        setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000)
+        setTimeout(() => setNotification({ show: false, message: "", type: "" }), 5000) 
     }
 
     useEffect(() => {
@@ -88,7 +82,7 @@ export default function CreateTests() {
 
             if (test.questions && test.questions.length > 0) {
                 const formattedQuestions = test.questions.map(q => ({
-                    id: q.id,
+                    id: q.id, 
                     question: q.question || "",
                     options: q.options?.map(opt => ({
                         text: opt.option || "",
@@ -99,7 +93,6 @@ export default function CreateTests() {
                             { text: "", correct: false },
                             { text: "", correct: false },
                         ],
-                    // Changed to store single attachment object instead of array
                     attachment: q.imageUrl ? { id: Date.now(), name: q.imageUrl, file: null } : null,
                     uploading: false,
                     isExisting: true,
@@ -109,6 +102,7 @@ export default function CreateTests() {
         }
     }, [test]);
 
+   
     useEffect(() => {
         if (fetchTestError) {
             showNotification(`Failed to load test: ${fetchTestError}`, "error");
@@ -120,6 +114,18 @@ export default function CreateTests() {
             showNotification(`Failed to delete question: ${deleteQuestionError}`, "error");
         }
     }, [deleteQuestionError]);
+
+    useEffect(() => {
+        if (addQuestionsError) {
+            showNotification(`Error saving questions: ${addQuestionsError}`, "error");
+        }
+    }, [addQuestionsError]);
+
+    useEffect(() => {
+        if (updateTestError) {
+            showNotification(`Error updating test: ${updateTestError}`, "error");
+        }
+    }, [updateTestError]);
 
     const addOption = (qIndex) => {
         setQuestions((prev) =>
@@ -139,7 +145,7 @@ export default function CreateTests() {
                     { text: "", correct: false },
                     { text: "", correct: false },
                 ],
-                attachment: null, // Changed from attachments array to single attachment
+                attachment: null,
                 uploading: false,
                 isExisting: false,
             },
@@ -163,12 +169,20 @@ export default function CreateTests() {
         }
     }
 
-    // Modified to replace any existing attachment instead of adding to array
     const handleFileUpload = (qIndex, e) => {
         const file = e.target.files[0]
         if (!file) return
 
         if (questions[qIndex].uploading) return
+
+        // Check if file is PDF or image
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp']
+
+        if (!allowedTypes.includes(file.type)) {
+            showNotification("Only PDF and image files are allowed", "error")
+            e.target.value = "" 
+            return
+        }
 
         // Set uploading state to true
         setQuestions((prev) => prev.map((q, index) => (index === qIndex ? { ...q, uploading: true } : q)))
@@ -179,7 +193,6 @@ export default function CreateTests() {
                     index === qIndex
                         ? {
                             ...q,
-                            // Replace the attachment instead of adding to array
                             attachment: { id: Date.now(), file, name: file.name },
                             uploading: false,
                         }
@@ -187,11 +200,10 @@ export default function CreateTests() {
                 ),
             )
 
-            e.target.value = "" // Reset file input
+            e.target.value = "" 
         }, 1500)
     }
 
-    // Modified to handle single attachment
     const removeAttachment = (qIndex) => {
         setQuestions((prev) =>
             prev.map((q, index) =>
@@ -208,11 +220,13 @@ export default function CreateTests() {
             return false
         }
 
-        if (q.options.length < 4) {
-            showNotification("At least 4 options are required for each question", "error")
+        // Must have minimum number of options
+        if (q.options.length < 2) {
+            showNotification("At least 2 options are required for each question", "error")
             return false
         }
 
+        // Check for empty options
         const emptyOptionIndex = q.options.findIndex(
             option => option.text === undefined || option.text === null || option.text.trim() === ""
         )
@@ -222,29 +236,54 @@ export default function CreateTests() {
             return false
         }
 
+        // Check for at least one correct option
         const hasCorrectOption = q.options.some(option => option.correct)
         if (!hasCorrectOption) {
-            showNotification(`Question "${q.question.substring(0, 20)}...": At least one option must be correct`, "error")
+            showNotification(`Question "${q.question.substring(0, 20)}...": At least one option must be marked as correct`, "error")
             return false
         }
 
         return true
     }
 
-    // Updated to handle single attachment
     const formatQuestionForBulkApi = (q) => {
-        return {
-            ...(q.isExisting ? { id: q.id } : {}),
+        // Only include ID for existing questions with valid UUIDs
+        const isUUID = (id) => {
+            const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            return typeof id === 'string' && regex.test(id);
+        };
+    
+        const questionData = {
             text: q.question,
             file: q.attachment?.file || null,
+            attachment: q.attachment, 
             options: q.options.map(option => ({
                 text: option.text,
-                is_correct: option.correct
+                is_correct: typeof option.correct === 'boolean' ? option.correct : false
             }))
+        };
+    
+        
+        if (q.isExisting && isUUID(q.id)) {
+            questionData.id = q.id;
         }
+    
+        return questionData;
     }
 
     const handleSubmitAllQuestions = async () => {
+        // Validate all questions first
+        let hasErrors = false;
+        questions.forEach(q => {
+            if (!validateQuestion(q)) {
+                hasErrors = true;
+            }
+        });
+
+        if (hasErrors) {
+            return false;
+        }
+
         const validQuestions = questions.filter(q => validateQuestion(q))
 
         if (validQuestions.length === 0) {
@@ -268,6 +307,7 @@ export default function CreateTests() {
 
         const formattedQuestions = validQuestions.map(formatQuestionForBulkApi)
 
+        
         const jsonData = {
             questions: formattedQuestions
         }
@@ -290,7 +330,7 @@ export default function CreateTests() {
                             { text: "", correct: false },
                             { text: "", correct: false },
                         ],
-                        attachment: null, // Changed from attachments array
+                        attachment: null,
                         uploading: false,
                         isExisting: false,
                     }
@@ -381,15 +421,18 @@ export default function CreateTests() {
             <div className="flex-1 flex flex-col pt-14 items-center p-4 md:pt-20 md:px-9 bg-white min-h-screen">
                 {notification.show && (
                     <div
-                        className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${notification.type === "success"
-                            ? "bg-green-500"
-                            : notification.type === "error"
-                                ? "bg-red-500"
-                                : notification.type === "info"
-                                    ? "bg-blue-500"
-                                    : "bg-yellow-500"
-                            } text-white`}
+                        className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 flex items-center ${
+                            notification.type === "success"
+                                ? "bg-green-500"
+                                : notification.type === "error"
+                                    ? "bg-red-500"
+                                    : notification.type === "info"
+                                        ? "bg-blue-500"
+                                        : "bg-yellow-500"
+                        } text-white`}
                     >
+                        {notification.type === "error" && <AlertCircle className="mr-2" size={18} />}
+                        {notification.type === "success" && <Check className="mr-2" size={18} />}
                         {notification.message}
                     </div>
                 )}
@@ -512,7 +555,6 @@ export default function CreateTests() {
                                                 )}
                                             </div>
 
-                                            {/* Display single attachment */}
                                             {q.attachment && (
                                                 <div className="mt-3">
                                                     <p className="text-sm font-medium mb-2">Attachment:</p>
@@ -524,6 +566,7 @@ export default function CreateTests() {
                                                             <button
                                                                 onClick={() => removeAttachment(qIndex)}
                                                                 className="ml-2 text-red-500 hover:text-red-700"
+                                                                type="button"
                                                             >
                                                                 <X size={14} />
                                                             </button>

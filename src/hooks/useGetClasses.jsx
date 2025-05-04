@@ -14,10 +14,10 @@ const useGetClasses = () => {
       const api = apiWithAuth();
       const response = await api.get("/persona/classes");
       
-      if (response.data && response.data.data) {
-        // Store the original class data with both ID and class name
-        setClasses(response.data.data);
-        return response.data.data;
+      if (response.data && response.data.data && response.data.data.data) {
+        
+        setClasses(response.data.data.data);
+        return response.data.data.data;
       } else {
         setError("Invalid response structure");
         return [];

@@ -14,23 +14,18 @@ export default function InnerCard({
     placeholder: "Search...",
     showSearchIcon: true
   },
-  firstDropdownProps = {
-    value: "",
-    onChange: () => {},
-    label: "Filter 1",
-    options: []
-  },
-  secondDropdownProps = null, // Optional second filter
-  dateFilterProps = null, // Optional date filter
+  firstDropdownProps = null, 
+  secondDropdownProps = null,
+  dateFilterProps = null, 
   showDivider = true,
-  classDropdownProps = null // Optional class dropdown
+  classDropdownProps = null
 }) {
   return (
     <div className={`bg-white w-full p-6 md:p-8 rounded-lg shadow-sm ${className}`}>
       {/* Search and Filters */}
       {showFilters && (
         <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-          {/* Search Input */}
+          
           <div className="relative w-full md:w-[50%]">
             <Input
               placeholder={searchProps.placeholder}
@@ -43,30 +38,32 @@ export default function InnerCard({
             )}
           </div>
           
-          {/* Class Dropdown (optional) - if provided, use instead of firstDropdownProps */}
-          {classDropdownProps ? (
-            <ClassDropdown
-              value={classDropdownProps.value}
-              onChange={classDropdownProps.onChange}
-              placeholder={classDropdownProps.placeholder || "Select class..."}
-              className="w-full md:w-auto bg-secondary`"
-              required={classDropdownProps.required}
-              error={classDropdownProps.error}
-            />
-          ) : (
-            /* First Dropdown (default if no classDropdownProps) */
+          {/* First Dropdown (optional) */}
+          {firstDropdownProps && (
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
               value={firstDropdownProps.value}
               onChange={firstDropdownProps.onChange}
             >
-              <option value="">{firstDropdownProps.label}</option>
+              <option value="">{firstDropdownProps.label || "Select..."}</option>
               {Array.isArray(firstDropdownProps.options) && firstDropdownProps.options.map((option, index) => (
                 <option key={index} value={option.value || option}>
                   {option.label || option}
                 </option>
               ))}
             </select>
+          )}
+
+        
+          {classDropdownProps && (
+            <ClassDropdown
+              value={classDropdownProps.value}
+              onChange={classDropdownProps.onChange}
+              placeholder={classDropdownProps.placeholder || "Select class..."}
+              className="w-full md:w-auto bg-secondary"
+              required={classDropdownProps.required}
+              error={classDropdownProps.error}
+            />
           )}
 
           {/* Second Dropdown (optional) */}
@@ -76,7 +73,7 @@ export default function InnerCard({
               value={secondDropdownProps.value}
               onChange={secondDropdownProps.onChange}
             >
-              <option value="">{secondDropdownProps.label}</option>
+              <option value="">{secondDropdownProps.label || "Select..."}</option>
               {Array.isArray(secondDropdownProps.options) && secondDropdownProps.options.map((option, index) => (
                 <option key={index} value={option.value || option}>
                   {option.label || option}

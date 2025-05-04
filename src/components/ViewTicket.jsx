@@ -16,12 +16,30 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  // Fetch ticket details when the modal opens and ticketId changes
+ 
   useEffect(() => {
     if (isOpen && ticketId) {
       fetchTicketDetails();
     }
   }, [isOpen, ticketId]);
+
+  const normalizeStatus = (statusValue) => {
+   
+    const normalized = String(statusValue || "").toLowerCase();
+    
+    
+    const statusMap = {
+      "pending": "open", 
+      "in_progress": "open", 
+      "in progress": "open", 
+      "resolved": "resolved", 
+      "closed": "closed", 
+      "waiting": "open", 
+      "open": "open" 
+    };
+    
+    return statusMap[normalized] || "open"; 
+  };
 
   const fetchTicketDetails = async () => {
     if (!ticketId) return;
@@ -33,15 +51,15 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
       const ticketData = await getTicketById(ticketId);
       setTicket(ticketData);
       
-      // Pre-fill the resolution field if available
+      
       if (ticketData.resolution) {
         setResolution(ticketData.resolution);
       } else {
         setResolution("");
       }
       
-      // Set the current status
-      setStatus(ticketData.status || "PENDING");
+     
+      setStatus(normalizeStatus(ticketData.status));
     } catch (err) {
       console.error("Get ticket details error:", err);
       setError(err.response?.data?.message || "Failed to fetch ticket details");
@@ -57,10 +75,14 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
     setError(null);
     
     try {
+      
+      const validStatus = normalizeStatus(status);
+      
       const payload = {
         resolution,
-        status
+        status: validStatus
       };
+      
       
       await updateTicket(ticketId, payload);
       
@@ -70,7 +92,13 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
     } catch (err) {
       console.error("Update ticket error:", err);
       setError(err.response?.data?.message || "Failed to update ticket");
-      toast.error("Failed to update ticket");
+      
+      // Show error details if available
+      const errorMsg = err.response?.data?.errors 
+        ? `Failed: ${err.response.data.errors.map(e => `${e.path} ${e.msg}`).join(', ')}`
+        : "Failed to update ticket";
+      
+      toast.error(errorMsg);
     } finally {
       setUpdateLoading(false);
     }
@@ -79,7 +107,7 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
   const handleDeleteTicket = async () => {
     if (!ticketId) return;
     
-    // Ask for confirmation before deleting
+   
     if (!window.confirm("Are you sure you want to delete this ticket? This action cannot be undone.")) {
       return;
     }
@@ -111,23 +139,26 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
     });
   };
 
-  const getStatusBadgeClass = (status) => {
-    switch (status?.toUpperCase()) {
-      case "OPEN":
-      case "PENDING":
+  const getStatusBadgeClass = (statusValue) => {
+    const normalizedStatus = normalizeStatus(statusValue);
+    
+    switch (normalizedStatus) {
+      case "open":
         return "bg-green-100 text-green-800";
-      case "IN_PROGRESS":
-      case "IN PROGRESS":
-        return "bg-blue-100 text-blue-800";
-      case "RESOLVED":
+      case "resolved":
         return "bg-gray-100 text-gray-800";
-      case "CLOSED":
+      case "closed":
         return "bg-gray-200 text-gray-800";
-      case "WAITING":
-        return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getDisplayStatus = (statusValue) => {
+    const normalizedStatus = normalizeStatus(statusValue);
+    
+    
+    return normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
   };
 
   return (
@@ -147,7 +178,7 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
             <h3 className="text-xl font-semibold mb-1">{ticket.subject}</h3>
             <div className="flex flex-wrap gap-2 mb-2">
               <span className={`text-xs px-2 py-1 rounded-full ${getStatusBadgeClass(ticket.status)}`}>
-                {ticket.status}
+                {getDisplayStatus(ticket.status)}
               </span>
             </div>
             <div className="text-sm text-gray-600">
@@ -252,10 +283,9 @@ const ViewTicketModal = ({ isOpen, onClose, ticketId, onSuccess }) => {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="PENDING">Pending</option>
-              <option value="IN_PROGRESS">In Progress</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="CLOSED">Closed</option>
+              <option value="open">Open</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
             </select>
           </div>
 

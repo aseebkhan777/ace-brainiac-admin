@@ -14,7 +14,7 @@ const useCreateSchool = () => {
     try {
       const api = apiWithAuth();
 
-      // Create an object with exactly the school data fields from the JSON schema
+      
       const payload = {
         city: schoolData.city,
         state: schoolData.state,
@@ -29,25 +29,23 @@ const useCreateSchool = () => {
         schoolName: schoolData.schoolName
       };
 
-      // Debugging: Log payload contents before sending
-      console.log("School Data payload:", payload);
 
-      // Send POST request to create school
+  
       const response = await api.post("/admin/schools", payload);
 
       console.log("School created successfully:", response.data);
       
-      // Return success with navigation function
+      
       return { 
         success: true, 
         data: response.data,
-        navigateTo: () => navigate("/schools") // Return navigation function to be called after toast
+        navigateTo: () => navigate("/schools")
       };
 
     } catch (err) {
       console.error("Create school error:", err);
 
-      // Log full response if available
+  
       if (err.response) {
         console.error("Full Response Data:", err.response);
         console.error("Response Headers:", err.response.headers);

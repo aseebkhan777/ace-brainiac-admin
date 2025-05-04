@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, FileText, Download, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Trash2 } from "lucide-react";
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
@@ -10,31 +10,27 @@ import useDeleteWorksheet from "../../hooks/useDeleteWorksheet";
 import { LoadingSpinner } from "../../components/Loader";
 
 export default function WorksheetsPage() {
-    const [page, setPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedSubject, setSelectedSubject] = useState("");
-    const [selectedClass, setSelectedClass] = useState("");
-    const [worksheetList, setWorksheetList] = useState([]);
-
     const navigate = useNavigate();
 
-    // Custom hooks
-    const { worksheets, loading, error } = useFetchWorksheets();
+    
+    const { 
+        worksheets, 
+        loading, 
+        error, 
+        handleChangeParams, 
+        params, 
+        totalPages,
+        refetch 
+    } = useFetchWorksheets();
+
     const { deleteWorksheet, deleteLoading, deleteError, deleteSuccess, clearDeleteStatus } = useDeleteWorksheet();
 
-    // Update local state when worksheets are fetched
-    useEffect(() => {
-        if (worksheets) {
-            setWorksheetList(worksheets);
-        }
-    }, [worksheets]);
-
-    // Handle delete success/error messages
+    
     useEffect(() => {
         if (deleteSuccess) {
             alert("Worksheet deleted successfully");
-            // Update the local state to remove the deleted worksheet
-            // This avoids having to refetch all worksheets
+            
+            refetch();
             clearDeleteStatus();
         }
         
@@ -42,53 +38,28 @@ export default function WorksheetsPage() {
             alert(`Error: ${deleteError}`);
             clearDeleteStatus();
         }
-    }, [deleteSuccess, deleteError, clearDeleteStatus]);
+    }, [deleteSuccess, deleteError, clearDeleteStatus, refetch]);
 
     // Prepare dropdown options
     const subjectOptions = [
+        { value: "", label: "All Subjects" },
         { value: "Mathematics", label: "Mathematics" },
         { value: "Science", label: "Science" },
         { value: "English", label: "English" },
         { value: "Social Studies", label: "Social Studies" }
     ];
 
-    const classOptions = [
-        { value: "6th", label: "Class 6th" },
-        { value: "7th", label: "Class 7th" },
-        { value: "8th", label: "Class 8th" },
-        { value: "9th", label: "Class 9th" },
-        { value: "10th", label: "Class 10th" }
-    ];
-
-    // Filter worksheets based on search and dropdown filters
-    const filteredWorksheets = worksheetList.filter(worksheet =>
-        (searchQuery === "" ||
-            worksheet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            worksheet.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
-        (selectedSubject === "" || worksheet.subject === selectedSubject) &&
-        (selectedClass === "" || worksheet.class === selectedClass)
-    );
-
-    // Pagination logic
-    const itemsPerPage = 6;
-    const totalPages = Math.ceil(filteredWorksheets.length / itemsPerPage);
-    const paginatedWorksheets = filteredWorksheets.slice(
-        (page - 1) * itemsPerPage,
-        page * itemsPerPage
-    );
 
     const handleAddWorksheet = () => {
         navigate("/worksheets/create");
     };
 
     const handleDownloadWorksheet = (fileUrl, title) => {
-        // Create a function to handle worksheet downloads
         if (!fileUrl) {
             alert("Download link not available");
             return;
         }
         
-        // Create a temporary anchor element to trigger download
         const anchor = document.createElement("a");
         anchor.href = fileUrl;
         anchor.download = `${title || "worksheet"}.pdf`;
@@ -99,20 +70,44 @@ export default function WorksheetsPage() {
 
     const handleDeleteWorksheet = async (worksheetId) => {
         if (window.confirm("Are you sure you want to delete this worksheet?")) {
-            const result = await deleteWorksheet(worksheetId);
-            
-            if (result.success) {
-                // Remove the worksheet from the local state
-                setWorksheetList(prevWorksheets => 
-                    prevWorksheets.filter(worksheet => worksheet.id !== worksheetId)
-                );
-            }
+            await deleteWorksheet(worksheetId);
+           
         }
+    };
+
+    // Handle search
+    const handleSearchChange = (e) => {
+        handleChangeParams({ param: 'query', newValue: e.target.value });
+    };
+
+    // Handle class filter
+    const handleClassChange = (value) => {
+        handleChangeParams({ param: 'class', newValue: value });
+    };
+
+    // Handle subject filter
+    const handleSubjectChange = (value) => {
+        handleChangeParams({ param: 'subject', newValue: value });
+    };
+
+    // Handle date filter
+    const handleDateChange = (date) => {
+        handleChangeParams({ param: 'date', newValue: date });
+    };
+
+    // Handle pagination
+    const handleNextPage = () => {
+        const nextPage = params.page + 1;
+        handleChangeParams({ param: 'page', newValue: nextPage });
+    };
+
+    const handlePrevPage = () => {
+        const prevPage = Math.max(1, params.page - 1);
+        handleChangeParams({ param: 'page', newValue: prevPage });
     };
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-
             {/* Main Content */}
             <div className="flex-1 flex flex-col bg-white">
                 <OuterCard
@@ -122,43 +117,53 @@ export default function WorksheetsPage() {
                 >
                     <InnerCard
                         searchProps={{
-                            value: searchQuery,
-                            onChange: (e) => setSearchQuery(e.target.value),
+                            value: params.query,
+                            onChange: handleSearchChange,
                             placeholder: "Search worksheets...",
                             showSearchIcon: true
                         }}
                         firstDropdownProps={{
-                            value: selectedSubject,
-                            onChange: (e) => setSelectedSubject(e.target.value),
+                            value: params.subject,
+                            onChange: handleSubjectChange,
                             label: "Subject",
                             options: subjectOptions
                         }}
                         classDropdownProps={{
-                            value: selectedClass,
-                            onChange: (value) => {
-                                setSelectedClass(value);
-                                setPage(1); // Reset to first page when filtering
-                            },
+                            value: params.class,
+                            onChange: handleClassChange,
                             placeholder: "Filter by class...",
-                            className:"bg-secondary"
-                        
+                            className: "bg-secondary"
+                        }}
+                        dateFilterProps={{
+                            selectedDate: params.date,
+                            onDateChange: handleDateChange,
+                            label: "Created Date"
                         }}
                     >
                         {/* Loading State */}
                         {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
-                        {error && <div className="text-red-500 text-center py-4">{error}</div>}
+                        {error && (
+                            <div className="text-red-500 text-center py-4">
+                                {error}
+                                <div className="mt-2">
+                                    <Button variant="secondary" onClick={refetch}>
+                                        Retry
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* No Worksheets State */}
-                        {!loading && !error && paginatedWorksheets.length === 0 && (
+                        {!loading && !error && worksheets.length === 0 && (
                             <div className="text-center py-4">No worksheets found</div>
                         )}
 
                         {/* Worksheets Cards Section */}
                         <div className="mt-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                                {paginatedWorksheets.map((worksheet) => (
+                                {worksheets.map((worksheet) => (
                                     <Card
                                         key={worksheet.id}
                                         height="h-[220px]"
@@ -175,7 +180,6 @@ export default function WorksheetsPage() {
                                                         handleDeleteWorksheet(worksheet.id);
                                                     }}
                                                 />
-                                               
                                             </div>
                                         </div>
 
@@ -198,7 +202,6 @@ export default function WorksheetsPage() {
                                         </div>
 
                                         <div className="flex justify-between gap-2 mt-3">
-                                            
                                             <Button
                                                 variant="outline"
                                                 className="mt-3 w-full text-xs flex justify-center items-center"
@@ -214,25 +217,27 @@ export default function WorksheetsPage() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center items-center gap-3 mt-5">
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
-                                className="px-2 py-1"
-                            >
-                                <ChevronLeft size={16} />
-                            </Button>
-                            <span className="text-sm">{page} of {totalPages || 1}</span>
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages || totalPages === 0}
-                                className="px-2 py-1"
-                            >
-                                <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                        {worksheets.length > 0 && (
+                            <div className="flex justify-center items-center gap-3 mt-5">
+                                <Button
+                                    variant="outline"
+                                    onClick={handlePrevPage}
+                                    disabled={params.page === 1}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronLeft size={16} />
+                                </Button>
+                                <span className="text-sm">{params.page} of {totalPages || 1}</span>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleNextPage}
+                                    disabled={params.page >= totalPages}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
+                        )}
                     </InnerCard>
                 </OuterCard>
             </div>

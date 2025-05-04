@@ -9,89 +9,66 @@ import useFetchStudents from "../../hooks/useFetchStudents";
 import { LoadingSpinner } from "../../components/Loader";
 
 export default function StudentsPage() {
-    const [page, setPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedClass, setSelectedClass] = useState("");
-    const [selectedDate, setSelectedDate] = useState("");
-
     const navigate = useNavigate();
 
-    // Fetch students using the custom hook
-    const { students = [], loading, error } = useFetchStudents();
+    
+    const { 
+        students = [], 
+        loading, 
+        error, 
+        handleChangeParams, 
+        params, 
+        totalPages,
+        refetch 
+    } = useFetchStudents();
 
-    // Helper function to normalize dates for comparison
-    const formatDateForComparison = (dateStr) => {
-        if (!dateStr) return "";
-        
-        // Handle different date formats
-        let date;
-        
-        // If it's in format "01 February 2000"
-        if (dateStr.includes(" ")) {
-            const parts = dateStr.split(" ");
-            const months = {
-                "January": "01", "February": "02", "March": "03", "April": "04",
-                "May": "05", "June": "06", "July": "07", "August": "08",
-                "September": "09", "October": "10", "November": "11", "December": "12"
-            };
-            const day = parts[0].padStart(2, '0');
-            const month = months[parts[1]];
-            const year = parts[2];
-            date = `${day}/${month}/${year}`;
-        } 
-        // If it's already in format "DD/MM/YYYY"
-        else if (dateStr.includes("/")) {
-            date = dateStr;
-        }
-        // If it's in another format, you may need to add more conditions
-        
-        return date;
+
+   
+    const statusOptions = [
+        { value: "", label: "All Statuses" },
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" },
+        { value: "Suspended", label: "Suspended" }
+    ];
+
+    // Handle search
+    const handleSearchChange = (e) => {
+        handleChangeParams({ param: 'query', newValue: e.target.value });
     };
 
-    // Filter students based on search and dropdown filters
-    const filteredStudents = students.filter(student => {
-        // Search filter
-        const matchesSearch = searchQuery === "" ||
-            student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            student.email.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        // Class filter
-        const matchesClass = selectedClass === "" || student.class === selectedClass;
-        
-        // Date filter
-        let matchesDate = true;
-        if (selectedDate !== "") {
-            const studentFormattedDate = formatDateForComparison(student.formattedDob);
-            const selectedFormattedDate = formatDateForComparison(selectedDate);
-            matchesDate = studentFormattedDate === selectedFormattedDate;
-        }
-        
-        return matchesSearch && matchesClass && matchesDate;
-    });
+    // Handle class filter
+    const handleClassChange = (value) => {
+        handleChangeParams({ param: 'class', newValue: value });
+    };
 
-    // Pagination logic
-    const itemsPerPage = 6;
-    const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-    const paginatedStudents = filteredStudents.slice(
-        (page - 1) * itemsPerPage,
-        page * itemsPerPage
-    );
+    // Handle status filter
+    const handleStatusChange = (value) => {
+        handleChangeParams({ param: 'status', newValue: value });
+    };
+
+    
+    const handleCreatedDateChange = (date) => {
+        handleChangeParams({ param: 'date', newValue: date });
+    };
+
+    // Handle pagination
+    const handleNextPage = () => {
+        const nextPage = params.page + 1;
+        handleChangeParams({ param: 'page', newValue: nextPage });
+    };
+
+    const handlePrevPage = () => {
+        const prevPage = Math.max(1, params.page - 1);
+        handleChangeParams({ param: 'page', newValue: prevPage });
+    };
 
     const handleAddStudent = () => {
         navigate("/students/create");
     };
 
     const handleViewStudent = (studentId) => {
-        // Navigate to the student details page with the ID as a URL parameter
-        navigate(`/students/${studentId}`);
-    };
-
-    const handleDateChange = (date) => {
-        // Make sure we're setting the date in a consistent format
-        setSelectedDate(date);
         
-        // Reset to first page when changing filter
-        setPage(1);
+        navigate(`/students/${studentId}`);
     };
 
     return (
@@ -105,44 +82,53 @@ export default function StudentsPage() {
                 >
                     <InnerCard
                         searchProps={{
-                            value: searchQuery,
-                            onChange: (e) => {
-                                setSearchQuery(e.target.value);
-                                setPage(1); // Reset to first page when searching
-                            },
+                            value: params.query,
+                            onChange: handleSearchChange,
                             placeholder: "Search students...",
                             showSearchIcon: true
                         }}
                         classDropdownProps={{
-                            value: selectedClass,
-                            onChange: (value) => {
-                                setSelectedClass(value);
-                                setPage(1); // Reset to first page when filtering
-                            },
+                            value: params.class,
+                            onChange: handleClassChange,
                             placeholder: "Filter by class...",
-                        
+                            
+                        }}
+                        firstDropdownProps={{
+                            value: params.status,
+                            onChange: handleStatusChange,
+                            label: "Status",
+                            options: statusOptions
                         }}
                         dateFilterProps={{
-                            selectedDate: selectedDate,
-                            onDateChange: handleDateChange,
-                            label: "Birth Date"
+                            selectedDate: params.date,
+                            onDateChange: handleCreatedDateChange,
+                            label: "Created Date"
                         }}
                     >
                         {/* Loading State */}
                         {loading && <div className="mt-10"><LoadingSpinner size="default" color="#31473A" /></div>}
 
                         {/* Error State */}
-                        {error && <div className="text-red-500 text-center py-4">{error}</div>}
+                        {error && (
+                            <div className="text-red-500 text-center py-4">
+                                {error}
+                                <div className="mt-2">
+                                    <Button variant="secondary" onClick={refetch}>
+                                        Retry
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* No Students State */}
-                        {!loading && !error && paginatedStudents.length === 0 && (
+                        {!loading && !error && students.length === 0 && (
                             <div className="text-center py-4">No students found</div>
                         )}
 
                         {/* Students Cards Section */}
                         <div className="mt-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-2">
-                                {paginatedStudents.map((student) => (
+                                {students.map((student) => (
                                     <Card
                                         key={student.id}
                                         height="h-[220px]"
@@ -173,6 +159,9 @@ export default function StudentsPage() {
                                                 <span className="font-medium">Date of Birth:</span> {student.formattedDob}
                                             </p>
                                             <p className="text-xs">
+                                                <span className="font-medium">Created:</span> {student.formattedCreatedAt}
+                                            </p>
+                                            <p className="text-xs">
                                                 <span className="font-medium">Phone:</span> {student.phone || 'Not provided'}
                                             </p>
                                         </div>
@@ -192,25 +181,27 @@ export default function StudentsPage() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center items-center gap-3 mt-5">
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page - 1)}
-                                disabled={page === 1}
-                                className="px-2 py-1"
-                            >
-                                <ChevronLeft size={16} />
-                            </Button>
-                            <span className="text-sm">{page} of {totalPages || 1}</span>
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(page + 1)}
-                                disabled={page === totalPages || totalPages === 0}
-                                className="px-2 py-1"
-                            >
-                                <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                        {students.length > 0 && (
+                            <div className="flex justify-center items-center gap-3 mt-5">
+                                <Button
+                                    variant="outline"
+                                    onClick={handlePrevPage}
+                                    disabled={params.page === 1}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronLeft size={16} />
+                                </Button>
+                                <span className="text-sm">{params.page} of {totalPages || 1}</span>
+                                <Button
+                                    variant="outline"
+                                    onClick={handleNextPage}
+                                    disabled={params.page >= totalPages}
+                                    className="px-2 py-1"
+                                >
+                                    <ChevronRight size={16} />
+                                </Button>
+                            </div>
+                        )}
                     </InnerCard>
                 </OuterCard>
             </div>

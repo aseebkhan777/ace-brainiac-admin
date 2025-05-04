@@ -2,49 +2,89 @@ import { useState, useEffect, useCallback } from "react";
 import { apiWithAuth } from "../axios/Instance";
 
 
-/**
- * Custom hook for managing admin support tickets
- * Provides functionality to fetch, view, update, and delete support tickets
- */
 const useAdminSupportTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   /**
-   * Fetch all support tickets
+   
+   * @param {number} page - The page number to fetch (defaults to 1)
+   * @param {number} limit - Number of items per page (defaults to 10)
+   * @param {string} query - Search query for filtering tickets (optional)
    */
-  const fetchTickets = useCallback(async () => {
+  const fetchTickets = useCallback(async (page = 1, limit = 10, query = "") => {
     setLoading(true);
     setError(null);
     
     try {
       const api = apiWithAuth();
-      const response = await api.get("/admin/support");
       
-      // Handle different possible response structures
-      if (response.data && response.data.data && Array.isArray(response.data.data.tickets)) {
-        setTickets(response.data.data.tickets);
-        return response.data.data.tickets;
-      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-        setTickets(response.data.data);
-        return response.data.data;
-      } else if (Array.isArray(response.data)) {
-        setTickets(response.data);
-        return response.data;
-      } else if (response.data && Array.isArray(response.data.tickets)) {
-        setTickets(response.data.tickets);
-        return response.data.tickets;
-      } else {
-        setTickets([]);
-        setError("Invalid response structure - no ticket data found");
-        return [];
+      const offset = (page - 1) * limit;
+      
+      
+      const params = {
+        offset,
+        limit
+      };
+      
+     
+      if (query && query.trim() !== "") {
+        params.query = query.trim();
       }
+      
+      const response = await api.get("/admin/support", { params });
+      
+      
+      let ticketsData = [];
+      let total = 0;
+      
+      if (response.data && response.data.data) {
+        if (Array.isArray(response.data.data.tickets)) {
+          ticketsData = response.data.data.tickets;
+          total = response.data.data.total || response.data.data.count || ticketsData.length;
+        } else if (Array.isArray(response.data.data)) {
+          ticketsData = response.data.data;
+          total = response.data.meta?.total || response.data.meta?.count || ticketsData.length;
+        }
+      } else if (Array.isArray(response.data)) {
+        ticketsData = response.data;
+        total = ticketsData.length;
+      } else if (response.data && Array.isArray(response.data.tickets)) {
+        ticketsData = response.data.tickets;
+        total = response.data.total || response.data.count || ticketsData.length;
+      } else {
+        setError("Invalid response structure - no ticket data found");
+        ticketsData = [];
+        total = 0;
+      }
+      
+      const pages = Math.ceil(total / limit);
+      
+      setTickets(ticketsData);
+      setTotalCount(total);
+      setTotalPages(pages);
+      
+      return {
+        tickets: ticketsData,
+        totalCount: total,
+        totalPages: pages,
+        currentPage: page
+      };
     } catch (err) {
       console.error("Get admin support tickets error:", err);
       setError(err.response?.data?.message || "Failed to fetch support tickets");
       setTickets([]);
-      return [];
+      setTotalCount(0);
+      setTotalPages(0);
+      return {
+        tickets: [],
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: page
+      };
     } finally {
       setLoading(false);
     }
@@ -63,7 +103,7 @@ const useAdminSupportTickets = () => {
       if (response.data && response.data.data) {
         return response.data.data;
       } else if (response.data) {
-        // Handle case where data might be directly in response.data
+        
         return response.data;
       }
       throw new Error("Invalid response structure");
@@ -112,15 +152,14 @@ const useAdminSupportTickets = () => {
     }
   }, []);
 
-  // Fetch tickets on initial load
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+  
 
   return { 
     tickets, 
     loading, 
     error, 
+    totalCount,
+    totalPages,
     fetchTickets,
     getTicketById,
     updateTicket,
