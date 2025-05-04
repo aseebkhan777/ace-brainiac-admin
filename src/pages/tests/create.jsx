@@ -49,7 +49,7 @@ export default function CreateTests() {
     const [notification, setNotification] = useState({ show: false, message: "", type: "" })
     const [previewImage, setPreviewImage] = useState(null)
 
-    const { test, loading: fetchingTest, error: fetchTestError } = useGetTest(testId)
+    const { test, loading: fetchingTest, error: fetchTestError, refreshTest } = useGetTest(testId)
     const { createTest, loading: creatingTest } = useCreateTest()
     const { addBulkQuestions, loading: addingQuestions, error: addQuestionsError } = useAddQuestion()
     const { updateTest, loading: updatingTest, error: updateTestError } = useUpdateTest(testId)
@@ -149,11 +149,13 @@ export default function CreateTests() {
         ])
     }
 
+
+    
     const removeQuestion = async (e, id, isExisting) => {
-        // Prevent form submission
+       
         e.preventDefault();
         e.stopPropagation();
-        
+
         if (isExisting && testId) {
             setSubmitting(true)
             const success = await deleteQuestion(testId, id)
@@ -161,7 +163,10 @@ export default function CreateTests() {
 
             if (success) {
                 showNotification("Question deleted successfully", "success")
+                
                 setQuestions(prev => prev.filter(q => q.id !== id))
+                
+                refreshTest()
             } else {
                 showNotification(deleteQuestionError || "Failed to delete question", "error")
             }
@@ -176,7 +181,7 @@ export default function CreateTests() {
 
         if (questions[qIndex].uploading) return
 
-        
+
         const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp']
 
         if (!allowedTypes.includes(file.type)) {
@@ -185,23 +190,23 @@ export default function CreateTests() {
             return
         }
 
-       
+
         setQuestions((prev) => prev.map((q, index) => (index === qIndex ? { ...q, uploading: true } : q)))
 
         setTimeout(() => {
-            
+
             const objectUrl = URL.createObjectURL(file);
-            
+
             setQuestions((prev) =>
                 prev.map((q, index) =>
                     index === qIndex
                         ? {
                             ...q,
-                            attachment: { 
-                                id: Date.now(), 
-                                file, 
+                            attachment: {
+                                id: Date.now(),
+                                file,
                                 name: file.name,
-                                url: objectUrl 
+                                url: objectUrl
                             },
                             uploading: false,
                         }
@@ -214,11 +219,11 @@ export default function CreateTests() {
     }
 
     const removeAttachment = (qIndex) => {
-        
+
         if (questions[qIndex].attachment?.url && questions[qIndex].attachment?.file) {
             URL.revokeObjectURL(questions[qIndex].attachment.url);
         }
-        
+
         setQuestions((prev) =>
             prev.map((q, index) =>
                 index === qIndex
@@ -444,12 +449,12 @@ export default function CreateTests() {
                 {notification.show && (
                     <div
                         className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 flex items-center ${notification.type === "success"
-                                ? "bg-green-500"
-                                : notification.type === "error"
-                                    ? "bg-red-500"
-                                    : notification.type === "info"
-                                        ? "bg-blue-500"
-                                        : "bg-yellow-500"
+                            ? "bg-green-500"
+                            : notification.type === "error"
+                                ? "bg-red-500"
+                                : notification.type === "info"
+                                    ? "bg-blue-500"
+                                    : "bg-yellow-500"
                             } text-white`}
                     >
                         {notification.type === "error" && <AlertCircle className="mr-2" size={18} />}
@@ -462,21 +467,21 @@ export default function CreateTests() {
                 {previewImage && (
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50" onClick={closeImagePreview}>
                         <div className="relative bg-white p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
-                            <button 
-                                className="absolute top-2 right-2 text-gray-700 hover:text-black" 
+                            <button
+                                className="absolute top-2 right-2 text-gray-700 hover:text-black"
                                 onClick={closeImagePreview}
                             >
                                 <X size={24} />
                             </button>
-                            <img 
-                                src={previewImage} 
-                                alt="Preview" 
+                            <img
+                                src={previewImage}
+                                alt="Preview"
                                 className="max-w-full max-h-[80vh] object-contain"
                             />
                             <div className="mt-4 flex justify-center">
-                                <a 
-                                    href={previewImage} 
-                                    target="_blank" 
+                                <a
+                                    href={previewImage}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                                     onClick={e => e.stopPropagation()}
@@ -543,7 +548,7 @@ export default function CreateTests() {
                                                     onClick={(e) => removeQuestion(e, q.id, q.isExisting)}
                                                     className="absolute top-2 right-2 text-red-500"
                                                     disabled={deletingQuestion}
-                                                    type="button" 
+                                                    type="button"
                                                 >
                                                     {deletingQuestion && q.isExisting ? (
                                                         <Loader size={18} className="animate-spin" />
@@ -616,7 +621,7 @@ export default function CreateTests() {
                                                             className="flex items-center bg-gray-50 px-3 py-1 rounded-full text-sm border"
                                                         >
                                                             <span className="truncate max-w-[150px]">{q.attachment.name}</span>
-                                                            
+
                                                             {/* Preview button */}
                                                             {q.attachment.url && (
                                                                 <button
@@ -627,7 +632,7 @@ export default function CreateTests() {
                                                                     <Eye size={14} />
                                                                 </button>
                                                             )}
-                                                            
+
                                                             <button
                                                                 onClick={() => removeAttachment(qIndex)}
                                                                 className="ml-2 text-red-500 hover:text-red-700"
@@ -677,9 +682,9 @@ export default function CreateTests() {
                                                 ))}
                                             </div>
 
-                                            <Button 
-                                                onClick={() => addOption(qIndex)} 
-                                                variant="outline" 
+                                            <Button
+                                                onClick={() => addOption(qIndex)}
+                                                variant="outline"
                                                 className="mt-2"
                                                 type="button"
                                             >
@@ -689,9 +694,9 @@ export default function CreateTests() {
                                     ))}
 
                                     <div className="flex justify-start mt-4">
-                                        <Button 
-                                            onClick={addNewQuestion} 
-                                            variant="outline" 
+                                        <Button
+                                            onClick={addNewQuestion}
+                                            variant="outline"
                                             className="text-black px-4 py-2 text-sm rounded"
                                             type="button"
                                         >

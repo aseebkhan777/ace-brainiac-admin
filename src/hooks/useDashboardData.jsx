@@ -11,7 +11,12 @@ const useDashboardData = () => {
     },
     subscriptionDistribution: {},
     recentlyCreatedTests: [],
-    recentlySubscribedMembers: []
+    recentlySubscribedMembers: [],
+    userGrowthChart: {
+      labels: [],
+      data: [],
+      cumulative: []
+    }
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,7 +39,8 @@ const useDashboardData = () => {
           },
           subscriptionDistribution: response.data.data.subscriptionDistribution || {},
           recentlyCreatedTests: response.data.data.recentlyCreatedTests || [],
-          recentlySubscribedMembers: response.data.data.recentlySubscribedMembers || []
+          recentlySubscribedMembers: response.data.data.recentlySubscribedMembers || [],
+          userGrowthChart: response.data.data.userGrowthChart || { labels: [], data: [], cumulative: [] }
         };
         
         setDashboardData(transformedData);

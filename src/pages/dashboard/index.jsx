@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OuterCard from '../../components/OuterCard';
 import DetailsCard from '../../components/DetailsCard';
@@ -21,7 +21,7 @@ export default function Dashboard() {
         count: 5
     });
     
-    const { stats, subscriptionDistribution, recentlyCreatedTests, recentlySubscribedMembers } = dashboardData || {};
+    const { stats, subscriptionDistribution, recentlyCreatedTests, recentlySubscribedMembers, userGrowthChart } = dashboardData || {};
 
     const formattedRecentTests = recentlyCreatedTests?.map(test => ({
         id: test.id,
@@ -45,6 +45,24 @@ export default function Dashboard() {
         plan: member.membershipTitle,
         avatar: '/avatar.jpeg'
     })) || [];
+    
+    
+    const userGrowthData = userGrowthChart?.labels?.map((label, index) => {
+        
+        const userCount = parseInt(userGrowthChart.data[index], 10) || 0;
+        
+        
+        const dateObj = new Date(label);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+        });
+        
+        return {
+            month: formattedDate,
+            users: userCount
+        };
+    }) || [];
 
     const handleViewTest = (item) => {
         navigate(`/tests/create/${item.id}`);
@@ -70,7 +88,7 @@ export default function Dashboard() {
         }));
     };
 
-    // Calculate display counts based on current view state
+    
     const displayedTests = formattedRecentTests.slice(0, testView.count);
     const displayedMembers = formattedMembers.slice(0, memberView.count);
 
@@ -94,21 +112,6 @@ export default function Dashboard() {
         );
     }
 
-    const userGrowthData = [
-        { month: '2025-01', users: stats?.students || 0 },
-        { month: '2025-02', users: stats?.students || 0 },
-        { month: '2025-03', users: stats?.students || 0 },
-        { month: '2025-04', users: stats?.students || 0 },
-        { month: '2025-05', users: stats?.students || 0 },
-        { month: '2025-06', users: stats?.students || 0 },
-        { month: '2025-07', users: stats?.students || 0 },
-        { month: '2025-08', users: stats?.students || 0 },
-        { month: '2025-09', users: stats?.students || 0 },
-        { month: '2025-10', users: stats?.students || 0 },
-        { month: '2025-11', users: stats?.students || 0 },
-        { month: '2025-12', users: stats?.students || 0 },
-    ];
-
     return (
         <OuterCard
             title="Dashboard"
@@ -124,7 +127,7 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-9">
                     <div className="lg:col-span-2 bg-white rounded-lg shadow p-4">
-                        {userGrowthData.some(data => data.users > 0) ? (
+                        {userGrowthData && userGrowthData.length > 0 ? (
                             <UserGrowthChart
                                 data={userGrowthData}
                                 title="Number of Users"

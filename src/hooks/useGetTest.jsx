@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiWithAuth } from "../axios/Instance";
 
 const useGetTest = (testId) => {
   const [test, setTest] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+ 
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const fetchTest = async () => {
+  const fetchTest = useCallback(async () => {
     if (!testId) return;
     
     setLoading(true);
@@ -30,15 +32,20 @@ const useGetTest = (testId) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [testId]);
+
+  
+  const refreshTest = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     if (testId) {
       fetchTest();
     }
-  }, [testId]);
+  }, [testId, refreshTrigger, fetchTest]);
 
-  return { test, loading, error, fetchTest };
+  return { test, loading, error, fetchTest, refreshTest };
 };
 
 export default useGetTest;
