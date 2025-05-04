@@ -25,7 +25,6 @@ const useDashboardData = () => {
       const response = await api.get('/admin/admin/dashboard');
 
       if (response.data && response.data.data) {
-        // Transform the API response to match our expected format
         const transformedData = {
           stats: {
             students: response.data.data.counts.students || 0,
@@ -64,11 +63,10 @@ const useDashboardData = () => {
     
     fetchData();
     
-    // Cleanup function to prevent state updates if component unmounts
     return () => {
       isMounted = false;
     };
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
   return { dashboardData, loading, error, refreshDashboardData: fetchDashboardData };
 };

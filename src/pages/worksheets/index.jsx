@@ -54,18 +54,14 @@ export default function WorksheetsPage() {
         navigate("/worksheets/create");
     };
 
-    const handleDownloadWorksheet = (fileUrl, title) => {
+    const handleOpenWorksheet = (fileUrl, title) => {
         if (!fileUrl) {
-            alert("Download link not available");
+            alert("Preview link not available");
             return;
         }
         
-        const anchor = document.createElement("a");
-        anchor.href = fileUrl;
-        anchor.download = `${title || "worksheet"}.pdf`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
+        
+        window.open(fileUrl, '_blank');
     };
 
     const handleDeleteWorksheet = async (worksheetId) => {
@@ -131,7 +127,7 @@ export default function WorksheetsPage() {
                         classDropdownProps={{
                             value: params.class,
                             onChange: handleClassChange,
-                            placeholder: "Filter by class...",
+                            placeholder: "Class Filter ..",
                             className: "bg-secondary"
                         }}
                         dateFilterProps={{
@@ -204,11 +200,12 @@ export default function WorksheetsPage() {
                                         <div className="flex justify-between gap-2 mt-3">
                                             <Button
                                                 variant="outline"
-                                                className="mt-3 w-full text-xs flex justify-center items-center"
-                                                onClick={() => handleDownloadWorksheet(worksheet.fileUrl, worksheet.title)}
+                                                className="mt-3 w-full text-xs flex justify-center items-center gap-1"
+                                                onClick={() => handleOpenWorksheet(worksheet.fileUrl, worksheet.title)}
                                                 disabled={!worksheet.fileUrl}
                                             >
                                                 <Download size={14} />
+                                                <span>Open PDF</span>
                                             </Button>
                                         </div>
                                     </Card>

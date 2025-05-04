@@ -24,7 +24,21 @@ const useFetchStudents = () => {
     
     const handleChangeParams = useCallback(({ param, newValue }) => {
         setParams(prevParams => {
-            if (param === 'query' || param === 'class' || param === 'status' || param === 'date') {
+            
+            if (param === 'status') {
+               
+                const statusValue = typeof newValue === 'object' && newValue !== null ? 
+                    (newValue.value || '') : 
+                    newValue;
+                
+                return {
+                    ...prevParams,
+                    status: statusValue,
+                    page: 1
+                };
+            }
+            
+            if (param === 'query' || param === 'class' || param === 'date') {
                 return {
                     ...prevParams,
                     [param]: newValue,

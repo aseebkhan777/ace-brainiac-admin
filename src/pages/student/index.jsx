@@ -25,10 +25,10 @@ export default function StudentsPage() {
 
    
     const statusOptions = [
-        { value: "", label: "All Statuses" },
-        { value: "Active", label: "Active" },
-        { value: "Inactive", label: "Inactive" },
-        { value: "Suspended", label: "Suspended" }
+        { value: "All", label: "All" },
+        { value: "active", label: "Active" },
+        { value: "pending", label: "Pending" },
+        { value: "inactive", label: "Inactive" }
     ];
 
     // Handle search
@@ -43,7 +43,12 @@ export default function StudentsPage() {
 
     // Handle status filter
     const handleStatusChange = (value) => {
-        handleChangeParams({ param: 'status', newValue: value });
+       
+        if (value === "All") {
+            handleChangeParams({ param: 'status', newValue: undefined });
+        } else {
+            handleChangeParams({ param: 'status', newValue: value });
+        }
     };
 
     
@@ -94,7 +99,7 @@ export default function StudentsPage() {
                             
                         }}
                         firstDropdownProps={{
-                            value: params.status,
+                            value: params.status || "All",
                             onChange: handleStatusChange,
                             label: "Status",
                             options: statusOptions

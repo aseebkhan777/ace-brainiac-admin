@@ -91,16 +91,15 @@ const PlanDistributionChart = ({
             {/* Donut Chart */}
             <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
               {segments.map((segment, index) => {
-                // IMPORTANT: Using direct fill color instead of Tailwind classes
-                // This fixes the issue with colors not showing up
+               
                 const fillColor = (() => {
                   switch(segment.name) {
-                    case 'Basic': return '#ef4444'; // red-500
-                    case 'Premium': return '#3b82f6'; // blue-500 
-                    case 'Deluxe': return '#a855f7'; // purple-500
+                    case 'Basic': return '#ef4444'; 
+                    case 'Premium': return '#3b82f6'; 
+                    case 'Deluxe': return '#a855f7'; 
                     default: return index === 0 ? '#ef4444' : 
                              index === 1 ? '#3b82f6' : 
-                             index === 2 ? '#a855f7' : '#10b981'; // Default colors
+                             index === 2 ? '#a855f7' : '#10b981'; 
                   }
                 })();
                 
@@ -133,18 +132,18 @@ const PlanDistributionChart = ({
             
             {/* Hover tooltip - appears only when hovering over a segment */}
             {hoveredSegment !== null && (
-              <div className="absolute left-0 right-0 -top-12 bg-white shadow-lg rounded p-2 text-center mx-auto w-32 text-sm pointer-events-none">
+              <div className="absolute left-0 right-0 -top-12 bg-white  p-2 text-center mx-auto w-32 text-sm pointer-events-none">
                 {getTooltipContent()}
               </div>
             )}
           </div>
         </div>
         
-        {/* Legend */}
+        {/* Legend - UPDATED to handle longer text better */}
         {showLegend && (
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2">
             {data.map((item, index) => {
-              // Determine dot color for legend based on the segment name
+              
               const dotColor = (() => {
                 switch(item.name) {
                   case 'Basic': return 'bg-red-500';
@@ -157,7 +156,7 @@ const PlanDistributionChart = ({
               })();
               
               return (
-                <div key={index} className="flex items-center text-sm">
+                <div key={index} className="flex items-center text-sm whitespace-nowrap">
                   <div className={`w-3 h-3 rounded-full mr-2 ${dotColor}`}></div>
                   <span className="mr-1">{item.name}:</span>
                   <span className="font-medium">{Math.round(item.value / total * 100)}%</span>

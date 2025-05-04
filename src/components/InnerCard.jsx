@@ -38,17 +38,19 @@ export default function InnerCard({
             )}
           </div>
           
-          {/* First Dropdown (optional) */}
+         
           {firstDropdownProps && (
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
-              value={firstDropdownProps.value}
-              onChange={firstDropdownProps.onChange}
+              value={firstDropdownProps.value || ""}
+              onChange={(e) => firstDropdownProps.onChange(e.target.value)}
             >
-              <option value="">{firstDropdownProps.label || "Select..."}</option>
+              {firstDropdownProps.placeholder && (
+                <option value="">{firstDropdownProps.placeholder || firstDropdownProps.label || "Select..."}</option>
+              )}
               {Array.isArray(firstDropdownProps.options) && firstDropdownProps.options.map((option, index) => (
-                <option key={index} value={option.value || option}>
-                  {option.label || option}
+                <option key={index} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -70,13 +72,15 @@ export default function InnerCard({
           {secondDropdownProps && (
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
-              value={secondDropdownProps.value}
-              onChange={secondDropdownProps.onChange}
+              value={secondDropdownProps.value || ""}
+              onChange={(e) => secondDropdownProps.onChange(e.target.value)}
             >
-              <option value="">{secondDropdownProps.label || "Select..."}</option>
+              {secondDropdownProps.placeholder && (
+                <option value="">{secondDropdownProps.placeholder || secondDropdownProps.label || "Select..."}</option>
+              )}
               {Array.isArray(secondDropdownProps.options) && secondDropdownProps.options.map((option, index) => (
-                <option key={index} value={option.value || option}>
-                  {option.label || option}
+                <option key={index} value={option.value}>
+                  {option.label}
                 </option>
               ))}
             </select>
