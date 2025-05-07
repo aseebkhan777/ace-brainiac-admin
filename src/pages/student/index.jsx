@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Card from "../../components/Card";
@@ -6,10 +6,13 @@ import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchStudents from "../../hooks/useFetchStudents";
+import useDeleteStudent from "../../hooks/useDeleteStudent";
 import { LoadingSpinner } from "../../components/Loader";
 
 export default function StudentsPage() {
     const navigate = useNavigate();
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [studentToDelete, setStudentToDelete] = useState(null);
     
     const { 
         students = [], 
@@ -20,6 +23,43 @@ export default function StudentsPage() {
         totalPages,
         refetch 
     } = useFetchStudents();
+
+    const {
+        deleteStudent,
+        isDeleting,
+        deleteError,
+        deleteSuccess,
+        resetDeleteState
+    } = useDeleteStudent();
+
+    // Handle delete confirmation
+    const handleDeleteClick = (student) => {
+        setStudentToDelete(student);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (studentToDelete) {
+            const success = await deleteStudent(studentToDelete.id);
+            if (success) {
+                setShowDeleteConfirm(false);
+                refetch();
+            }
+        }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setStudentToDelete(null);
+        resetDeleteState();
+    };
+
+    // Clean up delete status on unmount
+    useEffect(() => {
+        return () => {
+            resetDeleteState();
+        };
+    }, []);
    
     const statusOptions = [
         { value: "All", label: "All" },
@@ -40,9 +80,6 @@ export default function StudentsPage() {
 
     // Handle status filter 
     const handleStatusChange = (event) => {
-       
-        
-        
         const statusValue = event && event.target ? event.target.value : null;
         console.log("Status value:", statusValue);
         
@@ -174,10 +211,17 @@ export default function StudentsPage() {
                                         <div className="flex justify-center gap-2 mt-3">
                                             <Button
                                                 variant="secondary"
-                                                className="mt-3 w-full text-xs"
+                                                className="mt-3 w-1/2 text-xs"
                                                 onClick={() => handleViewStudent(student.id)}
                                             >
                                                 View Details
+                                            </Button>
+                                            <Button
+                                                variant="delete"
+                                                className="mt-3 w-1/2 text-xs"
+                                                onClick={() => handleDeleteClick(student)}
+                                            >
+                                                Delete
                                             </Button>
                                         </div>
                                     </Card>
@@ -210,6 +254,27 @@ export default function StudentsPage() {
                     </InnerCard>
                 </OuterCard>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                        <h3 className="text-lg font-medium mb-4">Confirm Delete</h3>
+                        <p>Are you sure you want to delete the student "{studentToDelete?.name}"?</p>
+                        {deleteError && (
+                            <div className="mt-2 text-red-500 text-sm">{deleteError}</div>
+                        )}
+                        <div className="mt-6 flex justify-end gap-3">
+                            <Button variant="outline" onClick={cancelDelete} disabled={isDeleting}>
+                                Cancel
+                            </Button>
+                            <Button variant="delete" onClick={confirmDelete} disabled={isDeleting}>
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

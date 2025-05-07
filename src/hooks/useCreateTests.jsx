@@ -11,11 +11,11 @@ const useCreateTest = () => {
     setError(null);
     try {
       const api = apiWithAuth();
-      // Send the form data in the request body
+      
       const response = await api.post("/admin/test", formData || {}); 
 
       if (response.data && response.data.data && response.data.data.id) {
-        return response.data.data.id; // ✅ Return only the test ID
+        return response.data.data.id; 
       } else {
         setError("Invalid response structure");
         return null;

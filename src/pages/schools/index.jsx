@@ -6,11 +6,14 @@ import Button from "../../components/Button";
 import OuterCard from "../../components/OuterCard";
 import InnerCard from "../../components/InnerCard";
 import useFetchSchools from "../../hooks/useFetchSchools";
+import useDeleteSchool from "../../hooks/useDeleteSchool";
 import { LoadingSpinner } from "../../components/Loader";
 
 export default function SchoolsPage() {
     const [page, setPage] = useState(1);
     const navigate = useNavigate();
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [schoolToDelete, setSchoolToDelete] = useState(null);
 
     const { 
         schools = [], 
@@ -22,6 +25,43 @@ export default function SchoolsPage() {
         refetch 
     } = useFetchSchools();
 
+    const {
+        deleteSchool,
+        isDeleting,
+        deleteError,
+        deleteSuccess,
+        resetDeleteState
+    } = useDeleteSchool();
+
+    // Handle delete confirmation
+    const handleDeleteClick = (school) => {
+        setSchoolToDelete(school);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (schoolToDelete) {
+            const success = await deleteSchool(schoolToDelete.id);
+            if (success) {
+                setShowDeleteConfirm(false);
+                refetch();
+            }
+        }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteConfirm(false);
+        setSchoolToDelete(null);
+        resetDeleteState();
+    };
+
+    // Clean up delete status on unmount
+    useEffect(() => {
+        return () => {
+            resetDeleteState();
+        };
+    }, []);
+
     // Handle search
     const handleSearchChange = (e) => {
         handleChangeParams({ param: 'query', newValue: e.target.value });
@@ -31,9 +71,7 @@ export default function SchoolsPage() {
     const handleStatusChange = (e) => {
         const newValue = e.target.value;
         
-        
         if (newValue === "ALL") {
-            
             handleChangeParams({ param: 'status', newValue: null });
         } else {
             handleChangeParams({ param: 'status', newValue });
@@ -173,10 +211,17 @@ export default function SchoolsPage() {
                                         <div className="flex justify-center gap-2 mt-3">
                                             <Button
                                                 variant="secondary"
-                                                className="mt-3 w-full text-xs"
+                                                className="mt-3 w-1/2 text-xs"
                                                 onClick={() => handleViewSchool(school.id)}
                                             >
                                                 View Details
+                                            </Button>
+                                            <Button
+                                                variant="delete"
+                                                className="mt-3 w-1/2 text-xs"
+                                                onClick={() => handleDeleteClick(school)}
+                                            >
+                                                Delete
                                             </Button>
                                         </div>
                                     </Card>
@@ -209,6 +254,27 @@ export default function SchoolsPage() {
                     </InnerCard>
                 </OuterCard>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+                        <h3 className="text-lg font-medium mb-4">Confirm Delete</h3>
+                        <p>Are you sure you want to delete the school "{schoolToDelete?.schoolName}"?</p>
+                        {deleteError && (
+                            <div className="mt-2 text-red-500 text-sm">{deleteError}</div>
+                        )}
+                        <div className="mt-6 flex justify-end gap-3">
+                            <Button variant="outline" onClick={cancelDelete} disabled={isDeleting}>
+                                Cancel
+                            </Button>
+                            <Button variant="delete" onClick={confirmDelete} disabled={isDeleting}>
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

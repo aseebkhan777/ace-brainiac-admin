@@ -248,8 +248,8 @@ export default function CreateTests() {
         }
 
 
-        if (q.options.length < 2) {
-            showNotification("At least 2 options are required for each question", "error")
+        if (q.options.length < 4) {
+            showNotification("At least 4 options are required for each question", "error")
             return false
         }
 
@@ -417,7 +417,7 @@ export default function CreateTests() {
             showNotification("Settings saved successfully", "success")
 
             if (!isEditMode) {
-                navigate(`/create-test/${currentTestId}`)
+                navigate(`/tests/create/${currentTestId}`)
             }
         } else {
             showNotification(updateTestError || "Failed to save settings", "error")
