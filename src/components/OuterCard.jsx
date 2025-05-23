@@ -6,6 +6,13 @@ export default function OuterCard({
   children,
   buttonText,
   onButtonClick,
+  buttonClassName = "bg-primary text-white", // Default button CSS
+  secondaryButtonText,
+  onSecondaryButtonClick,
+  secondaryButtonClassName = "bg-primary text-white", // Default secondary button CSS
+  tertiaryButtonText,
+  onTertiaryButtonClick,
+  tertiaryButtonClassName = "bg-primary text-white", // Default tertiary button CSS
   className = "",
   padding = "py-24", // Default padding, but customizable
 }) {
@@ -18,15 +25,35 @@ export default function OuterCard({
         {/* Page Header */}
         <div className="flex flex-col md:flex-row justify-between items-center w-full mb-6 gap-4 md:gap-0">
           <h1 className="text-2xl font-semibold">{title}</h1>
-          {buttonText && (
-            <Button
-              variant="default"
-              className="bg-primary text-white"
-              onClick={onButtonClick}
-            >
-              {buttonText}
-            </Button>
-          )}
+          <div className="flex space-x-2">
+            {buttonText && (
+              <Button
+                variant="edit"
+                className={buttonClassName}
+                onClick={onButtonClick}
+              >
+                {buttonText}
+              </Button>
+            )}
+            {secondaryButtonText && (
+              <Button
+                variant="default"
+                className={secondaryButtonClassName}
+                onClick={onSecondaryButtonClick}
+              >
+                {secondaryButtonText}
+              </Button>
+            )}
+            {tertiaryButtonText && (
+              <Button
+                variant="edit"
+                className={tertiaryButtonClassName}
+                onClick={onTertiaryButtonClick}
+              >
+                {tertiaryButtonText}
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Content */}

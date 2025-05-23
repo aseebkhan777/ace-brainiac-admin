@@ -1,7 +1,9 @@
 import React from "react";
 import Input from "./Input";
 import { Search } from "lucide-react";
-import DateFilter from "./DateFilter"; // Fixed typo in import name
+import DateFilter from "./DateFilter";
+import ClassDropdown from "./ClassDropdown";
+import SubjectDropdown from "./SubjectDropdown";
 
 export default function InnerCard({ 
   children,
@@ -13,27 +15,20 @@ export default function InnerCard({
     placeholder: "Search...",
     showSearchIcon: true
   },
-  firstDropdownProps = {
-    value: "",
-    onChange: () => {},
-    label: "Filter 1",
-    options: []
-  },
-  secondDropdownProps = null, // ✅ Set default to null (optional)
-  dateFilterProps = {
-    selectedDate: "",
-    onDateChange: () => {},
-    label: "Date"
-  },
-  showDivider = true
+  firstDropdownProps = null, 
+  secondDropdownProps = null,
+  dateFilterProps = null, 
+  showDivider = true,
+  classDropdownProps = null,
+  subjectDropdownProps = null
 }) {
   return (
     <div className={`bg-white w-full p-6 md:p-8 rounded-lg shadow-sm ${className}`}>
       {/* Search and Filters */}
       {showFilters && (
         <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
-          {/* Search Input */}
-          <div className="relative w-[50%]">
+          
+          <div className="relative w-full md:w-[40%]">
             <Input
               placeholder={searchProps.placeholder}
               value={searchProps.value}
@@ -45,29 +40,24 @@ export default function InnerCard({
             )}
           </div>
           
-          {/* First Dropdown (Class) */}
-          <select
-            className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
-            value={firstDropdownProps.value}
-            onChange={(e) => firstDropdownProps.onChange(e.target.value)}
-          >
-            <option value="">{firstDropdownProps.label}</option>
-            {firstDropdownProps.options.map((option, index) => (
-              <option key={index} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Second Dropdown (Subject) - ✅ Render only if props exist */}
-          {secondDropdownProps && (
+         
+          {firstDropdownProps && (
             <select
               className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
-              value={secondDropdownProps.value}
-              onChange={(e) => secondDropdownProps.onChange(e.target.value)}
+              value={firstDropdownProps.value || ""}
+              onChange={(e) => {
+                
+                if (typeof firstDropdownProps.onChange === 'function') {
+                  firstDropdownProps.onChange({
+                    target: { value: e.target.value }
+                  });
+                }
+              }}
             >
-              <option value="">{secondDropdownProps.label}</option>
-              {secondDropdownProps.options.map((option, index) => (
+              {firstDropdownProps.placeholder && (
+                <option value="">{firstDropdownProps.placeholder || firstDropdownProps.label || "Select..."}</option>
+              )}
+              {Array.isArray(firstDropdownProps.options) && firstDropdownProps.options.map((option, index) => (
                 <option key={index} value={option.value}>
                   {option.label}
                 </option>
@@ -75,13 +65,64 @@ export default function InnerCard({
             </select>
           )}
 
-          {/* Date Filter Component */}
-          <DateFilter
-            label={dateFilterProps.label}
-            selectedDate={dateFilterProps.selectedDate}
-            onDateChange={dateFilterProps.onDateChange}
-            className="w-full md:w-auto"
-          />
+        
+          {classDropdownProps && (
+            <ClassDropdown
+              value={classDropdownProps.value}
+              onChange={classDropdownProps.onChange}
+              placeholder={classDropdownProps.placeholder || "Select class..."}
+              className="w-full md:w-auto bg-secondary"
+              required={classDropdownProps.required}
+              error={classDropdownProps.error}
+            />
+          )}
+
+          {/* Subject Dropdown */}
+          {subjectDropdownProps && (
+            <SubjectDropdown
+              value={subjectDropdownProps.value}
+              onChange={subjectDropdownProps.onChange}
+              placeholder={subjectDropdownProps.placeholder || "Select subject..."}
+              className="w-full md:w-auto bg-secondary"
+              required={subjectDropdownProps.required}
+              error={subjectDropdownProps.error}
+            />
+          )}
+
+          {/* Second Dropdown (optional) */}
+          {secondDropdownProps && (
+            <select
+              className="border p-2 rounded-lg bg-secondary w-full md:w-auto"
+              value={secondDropdownProps.value || ""}
+              onChange={(e) => {
+                // Create a fake event object if the parent expects an event
+                if (typeof secondDropdownProps.onChange === 'function') {
+                  secondDropdownProps.onChange({
+                    target: { value: e.target.value }
+                  });
+                }
+              }}
+            >
+              {secondDropdownProps.placeholder && (
+                <option value="">{secondDropdownProps.placeholder || secondDropdownProps.label || "Select..."}</option>
+              )}
+              {Array.isArray(secondDropdownProps.options) && secondDropdownProps.options.map((option, index) => (
+                <option key={index} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Date Filter Component (optional) */}
+          {dateFilterProps && (
+            <DateFilter
+              label={dateFilterProps.label}
+              selectedDate={dateFilterProps.selectedDate}
+              onDateChange={dateFilterProps.onDateChange}
+              className="w-full md:w-auto"
+            />
+          )}
         </div>
       )}
       

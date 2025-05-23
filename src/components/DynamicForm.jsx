@@ -3,18 +3,20 @@ import { Upload, X, AlertCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import { Dropdown } from "./Dropdown";
 import Button from "./Button";
+import ClassDropdown from "./ClassDropdown";
+import SubjectDropdown from "./SubjectDropdown";
 
-const DynamicForm = ({ 
+const DynamicForm = ({
     title = "Create Form",
-    fields = [], 
-    onSubmit, 
-    loading = false, 
+    fields = [],
+    onSubmit,
+    loading = false,
     error = null,
     submitButtonText = "Submit",
     cancelButtonText = "Cancel",
-    onCancel 
+    onCancel
 }) => {
-    // Initialize form state dynamically based on fields
+
     const [formData, setFormData] = useState(
         Object.fromEntries(
             fields.map(field => [field.name, field.defaultValue || ''])
@@ -28,26 +30,26 @@ const DynamicForm = ({
     const handleFileUpload = (fieldName, e) => {
         const file = e.target.files[0];
         if (file) {
-            setFormData((prev) => ({ 
-                ...prev, 
-                [`${fieldName}_uploading`]: true 
+            setFormData((prev) => ({
+                ...prev,
+                [`${fieldName}_uploading`]: true
             }));
 
-            // Simulate upload delay for UI feedback
+            
             setTimeout(() => {
-                setFormData((prev) => ({ 
-                    ...prev, 
-                    [fieldName]: file, 
-                    [`${fieldName}_uploading`]: false 
+                setFormData((prev) => ({
+                    ...prev,
+                    [fieldName]: file,
+                    [`${fieldName}_uploading`]: false
                 }));
             }, 1500);
         }
     };
 
     const removeFile = (fieldName) => {
-        setFormData((prev) => ({ 
-            ...prev, 
-            [fieldName]: null 
+        setFormData((prev) => ({
+            ...prev,
+            [fieldName]: null
         }));
     };
 
@@ -62,7 +64,7 @@ const DynamicForm = ({
             return;
         }
 
-        // Call the provided onSubmit function
+        
         onSubmit(formData);
     };
 
@@ -81,6 +83,53 @@ const DynamicForm = ({
                         className="w-full mb-3 p-2 border rounded-lg bg-white"
                         onChange={(e) => handleFieldChange(field.name, e.target.value)}
                         disabled={loading}
+                    />
+                );
+
+            case 'number':
+                return (
+                    <input
+                        key={field.name}
+                        type="number"
+                        placeholder={field.placeholder}
+                        value={formData[field.name]}
+                        className="w-full mb-3 p-2 border rounded-lg bg-white"
+                        onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                        disabled={loading}
+                    />
+                );
+
+            case 'classDropdown':
+                return (
+                    <ClassDropdown
+                        key={field.name}
+                        value={formData[field.name]}
+                        onChange={(value) => handleFieldChange(field.name, value)}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        disabled={loading}
+                        required={field.required}
+                        label={field.label}
+                        className="mb-3"
+                        bgColor="bg-white"
+                        error={field.error}
+                    />
+                );
+                
+            case 'subjectDropdown':
+                return (
+                    <SubjectDropdown
+                        key={field.name}
+                        value={formData[field.name]}
+                        onChange={(value) => handleFieldChange(field.name, value)}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        disabled={loading}
+                        required={field.required}
+                        label={field.label}
+                        className="mb-3"
+                        bgColor="bg-white"
+                        error={field.error}
                     />
                 );
 
@@ -151,9 +200,8 @@ const DynamicForm = ({
                         />
                         <label
                             htmlFor={`file-upload-${field.name}`}
-                            className={`flex items-center text-sm border p-2 rounded-lg cursor-pointer bg-gray-50 ${
-                                loading ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
+                            className={`flex items-center text-sm border p-2 rounded-lg cursor-pointer bg-gray-50 ${loading ? "opacity-50 cursor-not-allowed" : ""
+                                }`}
                         >
                             <Upload className="mr-2" size={18} />
                             <span>{field.placeholder}</span>
@@ -170,8 +218,8 @@ const DynamicForm = ({
                         {formData[field.name] && !formData[`${field.name}_uploading`] && (
                             <div className="mt-2 flex items-center bg-gray-50 px-3 py-1 rounded-full text-sm border">
                                 <span className="truncate max-w-[200px]">{formData[field.name].name}</span>
-                                <button 
-                                    onClick={() => removeFile(field.name)} 
+                                <button
+                                    onClick={() => removeFile(field.name)}
                                     className="ml-2 text-red-500 hover:text-red-700"
                                     disabled={loading}
                                 >
@@ -200,14 +248,21 @@ const DynamicForm = ({
             )}
 
             {/* Dynamic Fields Rendering */}
-            {fields.map(renderField)}
+            {fields.map(field => (
+                <div key={field.name}>
+                    {field.sectionTitle && (
+                        <h3 className="text-md font-medium mt-6 mb-3">{field.sectionTitle}</h3>
+                    )}
+                    {renderField(field)}
+                </div>
+            ))}
 
             {/* Footer: Action Buttons */}
             <div className="mt-3 flex justify-end items-center space-x-4">
                 {onCancel && (
-                    <Button 
-                        onClick={onCancel} 
-                        className="text-gray-600 border border-gray-300 px-6 py-2 rounded-lg"
+                    <Button
+                        onClick={onCancel}
+                        className="text-white mt-2 border border-gray-300 px-6 py-2 rounded-lg"
                         disabled={loading}
                     >
                         {cancelButtonText}
@@ -215,11 +270,10 @@ const DynamicForm = ({
                 )}
 
                 {/* Create/Submit Button */}
-                <Button 
-                    onClick={handleSubmit} 
-                    className={`bg-primary text-white px-6 py-2 rounded-lg mt-2 ${
-                        loading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
+                <Button
+                    onClick={handleSubmit}
+                    className={`bg-primary text-white px-6 py-2 rounded-lg mt-2 ${loading ? "opacity-70 cursor-not-allowed" : ""
+                        }`}
                     disabled={loading}
                 >
                     {loading ? "Submitting..." : submitButtonText}

@@ -5,27 +5,11 @@ import OuterCard from "../../components/OuterCard";
 import DynamicForm from "../../components/DynamicForm";
 import useCreateStudent from "../../hooks/useCreateStudents";
 
-
 // Predefined options for gender and class dropdowns
 const GENDER_OPTIONS = [
     { value: 'Male', label: 'Male' },
     { value: 'Female', label: 'Female' },
     { value: 'Other', label: 'Other' }
-];
-
-const CLASS_OPTIONS = [
-    { value: '1st Grade', label: 'Grade 1' },
-    { value: '2nd Grade', label: 'Grade 2' },
-    { value: '3rd Grade', label: 'Grade 3' },
-    { value: '4th Grade', label: 'Grade 4' },
-    { value: '5th Grade', label: 'Grade 5' },
-    { value: '6th Grade', label: 'Grade 6' },
-    { value: '7th Grade', label: 'Grade 7' },
-    { value: '8th Grade', label: 'Grade 8' },
-    { value: '9th Grade', label: 'Grade 9' },
-    { value: '10th Grade', label: 'Grade 10' },
-    { value: '11th Grade', label: 'Grade 11' },
-    { value: '12th Grade', label: 'Grade 12' }
 ];
 
 export default function CreateStudent() {
@@ -61,10 +45,9 @@ export default function CreateStudent() {
         },
         {
             name: 'class',
-            type: 'dropdown',
+            type: 'classDropdown', 
             placeholder: 'Select Class',
             required: true,
-            options: CLASS_OPTIONS
         },
         {
             name: 'phone',
@@ -100,8 +83,14 @@ export default function CreateStudent() {
         const result = await createStudent(formData);
         
         if (result.success) {
-            // Show success toast notification
-            toast.success("Student created successfully!");
+            // Show success toast notification and navigate after toast closes
+            toast.success("Student created successfully!", {
+                onClose: () => {
+                    // Navigate after toast closes
+                    result.navigateTo();
+                },
+                autoClose: 2000 // Ensure toast shows for at least 2 seconds
+            });
         } else if (result.error) {
             // Show error toast
             toast.error(result.error);
