@@ -2,7 +2,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 
 // Base URL for all API calls
-const BASE_URL = "https://ace-braniac-express-production.up.railway.app/v1";
+const BASE_URL = "https://ace-braniac-express-g36e.onrender.com";
 
 // Base API instance (No Authorization)
 const api = axios.create({
